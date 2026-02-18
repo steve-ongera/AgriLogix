@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Farms{% endblock %}
+
+{% block content %}
+<h1>🌾 Farms</h1>
+
+<form method="get">
+    <label>Farm Type
+        <select name="type">
+            <option value="">All Types</option>
+            {% for value, label in farm_types %}
+                <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>County
+        <input type="text" name="county" value="{{ request.GET.county }}" placeholder="e.g. Nakuru">
+    </label>
+    <button type="submit">Filter</button>
+    <a href="{% url 'farm_list' %}">Clear</a>
+</form>
+
+{% if user.role == 'farmer' %}
+    <a href="{% url 'farm_create' %}">+ Register New Farm</a>
+{% endif %}
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Farm</th><th>Owner</th><th>Type</th><th>Location</th>
+            <th>Size (acres)</th><th>Cold Storage</th><th>Certification</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for farm in farms %}
+        <tr>
+            <td><a href="{% url 'farm_detail' farm.pk %}">{{ farm.name }}</a></td>
+            <td>{{ farm.owner.get_full_name }}</td>
+            <td>{{ farm.get_farm_type_display }}</td>
+            <td>{{ farm.location_name }}</td>
+            <td>{{ farm.size_acres }}</td>
+            <td>{{ farm.has_storage|yesno:"Yes,No" }}</td>
+            <td>{{ farm.certification|default:"—" }}</td>
+            <td><a href="{% url 'farm_detail' farm.pk %}">View</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">No farms found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

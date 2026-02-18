@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<h1>🔔 Notifications</h1>
+
+<form method="post" action="{% url 'notification_mark_all_read' %}">
+    {% csrf_token %}
+    <button type="submit">✅ Mark All as Read</button>
+</form>
+
+<table border="1">
+    <thead>
+        <tr><th>Type</th><th>Title</th><th>Message</th><th>Read</th><th>Time</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+        {% for n in notifications %}
+        <tr>
+            <td>{{ n.get_notification_type_display }}</td>
+            <td><strong>{{ n.title }}</strong></td>
+            <td>{{ n.message|truncatewords:15 }}</td>
+            <td>{{ n.is_read|yesno:"Read,Unread" }}</td>
+            <td>{{ n.created_at|timesince }} ago</td>
+            <td>
+                {% if not n.is_read %}
+                    <a href="{% url 'notification_mark_read' n.pk %}">Mark Read</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No notifications.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

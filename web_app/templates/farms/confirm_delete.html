@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Deactivate Farm{% endblock %}
+
+{% block content %}
+<h1>🗑️ Deactivate Farm</h1>
+<p>Are you sure you want to deactivate <strong>{{ farm.name }}</strong>?</p>
+<p>The farm will be hidden from listings but your data will be preserved.</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, Deactivate</button>
+    <a href="{% url 'farm_detail' farm.pk %}">Cancel</a>
+</form>
+{% endblock %}

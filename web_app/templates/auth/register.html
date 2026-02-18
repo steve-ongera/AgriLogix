@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register | AgriLogix</title>
+</head>
+<body>
+
+<h1>🌾 AgriLogix — Create Account</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
+<form method="post" action="{% url 'register' %}">
+    {% csrf_token %}
+
+    <fieldset>
+        <legend>Personal Info</legend>
+        <label>First Name
+            <input type="text" name="first_name" required>
+        </label><br>
+        <label>Last Name
+            <input type="text" name="last_name" required>
+        </label><br>
+        <label>Username
+            <input type="text" name="username" required>
+        </label><br>
+        <label>Email
+            <input type="email" name="email" required>
+        </label><br>
+        <label>Password
+            <input type="password" name="password" required>
+        </label><br>
+    </fieldset>
+
+    <fieldset>
+        <legend>AgriLogix Profile</legend>
+        <label>Role
+            <select name="role" required>
+                {% for value, label in roles %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label><br>
+        <label>Phone Number
+            <input type="tel" name="phone" placeholder="07XXXXXXXX">
+        </label><br>
+        <label>Location / County
+            <input type="text" name="location" placeholder="e.g. Nakuru County">
+        </label><br>
+    </fieldset>
+
+    <button type="submit">Create Account</button>
+</form>
+
+<p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+
+</body>
+</html>

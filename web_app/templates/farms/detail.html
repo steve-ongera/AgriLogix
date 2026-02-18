@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}{{ farm.name }}{% endblock %}
+
+{% block content %}
+<h1>🌾 {{ farm.name }}</h1>
+<p>Owner: {{ farm.owner.get_full_name }} | Type: {{ farm.get_farm_type_display }}</p>
+
+<section>
+    <h2>Farm Details</h2>
+    <table border="1">
+        <tr><th>Location</th><td>{{ farm.location_name }}</td></tr>
+        <tr><th>Nearest Town</th><td>{{ farm.nearest_town }}</td></tr>
+        <tr><th>Size</th><td>{{ farm.size_acres }} acres</td></tr>
+        <tr><th>Distance to Road</th><td>{{ farm.distance_to_road_km }} km</td></tr>
+        <tr><th>Water Source</th><td>{{ farm.water_source|default:"—" }}</td></tr>
+        <tr><th>Has Storage</th><td>{{ farm.has_storage|yesno:"Yes,No" }}</td></tr>
+        <tr><th>Has Electricity</th><td>{{ farm.has_electricity|yesno:"Yes,No" }}</td></tr>
+        <tr><th>Certification</th><td>{{ farm.certification|default:"None" }}</td></tr>
+        <tr><th>GPS</th><td>{{ farm.latitude }}, {{ farm.longitude }}</td></tr>
+    </table>
+    <p>{{ farm.description }}</p>
+</section>
+
+{% if user == farm.owner %}
+<p>
+    <a href="{% url 'farm_edit' farm.pk %}">✏️ Edit Farm</a> |
+    <a href="{% url 'farm_delete' farm.pk %}">🗑️ Deactivate</a> |
+    <a href="{% url 'harvest_create' farm.pk %}">+ Add Harvest Schedule</a>
+</p>
+{% endif %}
+
+<section>
+    <h2>🥦 Available Products ({{ products.count }})</h2>
+    <table border="1">
+        <thead>
+            <tr><th>Product</th><th>Qty</th><th>Unit</th><th>Price</th><th>Harvest Date</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for p in products %}
+            <tr>
+                <td><a href="{% url 'product_detail' p.pk %}">{{ p.name }}</a></td>
+                <td>{{ p.quantity_available }}</td>
+                <td>{{ p.unit }}</td>
+                <td>KES {{ p.price_per_unit }}</td>
+                <td>{{ p.harvest_date }}</td>
+                <td>
+                    <a href="{% url 'product_detail' p.pk %}">View</a>
+                    {% if user.role == 'buyer' %}
+                        | <a href="{% url 'order_create' p.pk %}">Order</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6">No products listed.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if user == farm.owner %}
+        <a href="{% url 'product_create' %}">+ List New Product</a>
+    {% endif %}
+</section>
+
+<section>
+    <h2>📅 Harvest Schedules</h2>
+    <table border="1">
+        <thead>
+            <tr><th>Product</th><th>Expected (kg)</th><th>Actual (kg)</th><th>Harvest Date</th><th>Pickup Date</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for h in harvests %}
+            <tr>
+                <td>{{ h.product_name }}</td>
+                <td>{{ h.expected_quantity_kg }}</td>
+                <td>{{ h.actual_quantity_kg|default:"—" }}</td>
+                <td>{{ h.harvest_date }}</td>
+                <td>{{ h.ready_for_pickup_date }}</td>
+                <td>{{ h.get_status_display }}</td>
+                <td>
+                    {% if user == farm.owner %}
+                    <form method="post" action="{% url 'harvest_update_status' h.pk %}">
+                        {% csrf_token %}
+                        <select name="status">
+                            <option value="planned">Planned</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="ready">Ready</option>
+                            <option value="collected">Collected</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                        <button type="submit">Update</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7">No schedules.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>📉 Loss Reports</h2>
+    {% if loss_reports %}
+    <table border="1">
+        <thead>
+            <tr><th>Product</th><th>Qty Lost (kg)</th><th>Value Lost</th><th>Cause</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for r in loss_reports %}
+            <tr>
+                <td>{{ r.product_name }}</td>
+                <td>{{ r.quantity_lost_kg }}</td>
+                <td>KES {{ r.estimated_value_lost|floatformat:0 }}</td>
+                <td>{{ r.get_primary_cause_display }}</td>
+                <td>{{ r.incident_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No loss reports. Great work! ✅</p>
+    {% endif %}
+</section>
+{% endblock %}

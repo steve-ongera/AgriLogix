@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Loss Reports{% endblock %}
+
+{% block content %}
+<h1>📉 Post-Harvest Loss Reports</h1>
+
+{% if user.role == 'farmer' %}
+    <a href="{% url 'loss_report_create' %}">+ Report a Loss</a>
+{% endif %}
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Farm</th><th>Product</th><th>Qty Lost (kg)</th><th>Value Lost (KES)</th>
+            <th>Cause</th><th>Cold Chain Used</th><th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for report in reports %}
+        <tr>
+            <td><a href="{% url 'farm_detail' report.farm.pk %}">{{ report.farm.name }}</a></td>
+            <td>{{ report.product_name }}</td>
+            <td>{{ report.quantity_lost_kg }}</td>
+            <td>{{ report.estimated_value_lost|floatformat:0 }}</td>
+            <td>{{ report.get_primary_cause_display }}</td>
+            <td>{{ report.was_cold_chain_used|yesno:"Yes,No" }}</td>
+            <td>{{ report.incident_date }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No loss reports found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

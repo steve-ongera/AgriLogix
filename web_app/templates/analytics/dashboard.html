@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<h1>📊 Analytics Dashboard</h1>
+
+<section>
+    <h2>📉 Post-Harvest Loss Summary</h2>
+    <p>Total Kg Lost: <strong>{{ total_losses.total_kg|floatformat:0|default:"0" }} kg</strong></p>
+    <p>Total Value Lost: <strong>KES {{ total_losses.total_value|floatformat:0|default:"0" }}</strong></p>
+
+    <h3>Losses by Cause</h3>
+    <table border="1">
+        <thead><tr><th>Cause</th><th>Total (kg)</th><th>Incidents</th></tr></thead>
+        <tbody>
+            {% for row in losses_by_cause %}
+            <tr>
+                <td>{{ row.primary_cause }}</td>
+                <td>{{ row.total_kg|floatformat:0 }}</td>
+                <td>{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'loss_report_list' %}">View All Loss Reports →</a>
+</section>
+
+<section>
+    <h2>📈 Platform Metrics (Last 30 Days)</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Date</th><th>Orders</th><th>GMV (KES)</th>
+                <th>Farmer Earnings</th><th>Savings vs Middlemen</th>
+                <th>Drivers</th><th>Cold Chain Trips</th><th>Spoilage Prevented (kg)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in metrics %}
+            <tr>
+                <td>{{ m.date }}</td>
+                <td>{{ m.completed_orders }}/{{ m.total_orders }}</td>
+                <td>{{ m.total_gmv|floatformat:0 }}</td>
+                <td>{{ m.total_farmer_earnings|floatformat:0 }}</td>
+                <td>{{ m.total_middleman_savings|floatformat:0 }}</td>
+                <td>{{ m.active_drivers }}</td>
+                <td>{{ m.cold_chain_trips }}</td>
+                <td>{{ m.spoilage_prevented_kg }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>🏪 Market Coverage</h2>
+    <table border="1">
+        <thead><tr><th>Market</th><th>Products Tracked</th></tr></thead>
+        <tbody>
+            {% for market in top_markets %}
+            <tr>
+                <td>{{ market.market }}</td>
+                <td>{{ market.product_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'market_prices' %}">View Market Prices →</a>
+</section>
+{% endblock %}

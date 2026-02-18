@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Temperature Logs{% endblock %}
+
+{% block content %}
+<h1>🌡️ Temperature Logs</h1>
+<h2>{{ booking.product_description }} @ {{ booking.facility.name }}</h2>
+<p>Period: {{ booking.start_date }} to {{ booking.end_date }}</p>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Sensor</th><th>Temp (°C)</th><th>Humidity (%)</th>
+            <th>Alert Level</th><th>Alert Sent</th><th>Recorded At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in temp_logs %}
+        <tr>
+            <td>{{ log.sensor_id }}</td>
+            <td>{{ log.temperature_celsius }}</td>
+            <td>{{ log.humidity_percent|default:"—" }}</td>
+            <td>{{ log.get_alert_level_display }}</td>
+            <td>{{ log.is_alert_sent|yesno:"Yes,No" }}</td>
+            <td>{{ log.recorded_at|date:"d M Y H:i:s" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No temperature logs found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'cold_storage_booking_detail' booking.pk %}">← Back to Booking</a>
+{% endblock %}

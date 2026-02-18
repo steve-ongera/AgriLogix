@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Add Harvest Schedule{% endblock %}
+
+{% block content %}
+<h1>📅 Add Harvest Schedule</h1>
+<h2>Farm: {{ farm.name }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <label>Product Name <input type="text" name="product_name" required></label><br>
+    <label>Expected Quantity (kg) <input type="number" name="expected_quantity_kg" step="0.01" required></label><br>
+    <label>Harvest Date <input type="date" name="harvest_date" required></label><br>
+    <label>Ready for Pickup Date <input type="date" name="ready_for_pickup_date" required></label><br>
+    <label>Notes <textarea name="notes" rows="2"></textarea></label><br>
+    <button type="submit">Add Schedule</button>
+    <a href="{% url 'farm_detail' farm.pk %}">Cancel</a>
+</form>
+{% endblock %}

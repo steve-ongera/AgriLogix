@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Market Prices{% endblock %}
+
+{% block content %}
+<h1>💹 Market Price Index</h1>
+
+<form method="get">
+    <label>Market
+        <select name="market">
+            <option value="">All Markets</option>
+            {% for value, label in markets %}
+                <option value="{{ value }}" {% if request.GET.market == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Product <input type="text" name="product" value="{{ request.GET.product }}" placeholder="e.g. Cabbage"></label>
+    <button type="submit">Search</button>
+    <a href="{% url 'market_prices' %}">Clear</a>
+</form>
+
+<table border="1">
+    <thead>
+        <tr><th>Product</th><th>Market</th><th>Price/kg (KES)</th><th>Date</th></tr>
+    </thead>
+    <tbody>
+        {% for price in prices %}
+        <tr>
+            <td>{{ price.product_name }}</td>
+            <td>{{ price.get_market_display }}</td>
+            <td>{{ price.price_per_kg }}</td>
+            <td>{{ price.recorded_date }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No price data found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

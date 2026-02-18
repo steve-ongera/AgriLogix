@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Booking — {{ booking.product_description }}{% endblock %}
+
+{% block content %}
+<h1>❄️ Cold Storage Booking</h1>
+
+<section>
+    <h2>Booking Details</h2>
+    <table border="1">
+        <tr><th>Facility</th><td>{{ booking.facility.name }}</td></tr>
+        <tr><th>Product</th><td>{{ booking.product_description }}</td></tr>
+        <tr><th>Booked By</th><td>{{ booking.booked_by.get_full_name }}</td></tr>
+        <tr><th>Quantity</th><td>{{ booking.quantity_tonnes }} tonnes</td></tr>
+        <tr><th>Temp Required</th><td>{{ booking.required_temp_min }}°C to {{ booking.required_temp_max }}°C</td></tr>
+        <tr><th>Start Date</th><td>{{ booking.start_date }}</td></tr>
+        <tr><th>End Date</th><td>{{ booking.end_date }}</td></tr>
+        <tr><th>Duration</th><td>{{ booking.duration_days }} days</td></tr>
+        <tr><th>Total Cost</th><td><strong>KES {{ booking.total_cost|floatformat:0 }}</strong></td></tr>
+        <tr><th>Status</th><td>{{ booking.get_status_display }}</td></tr>
+    </table>
+</section>
+
+<section>
+    <h2>Temperature Alert Summary</h2>
+    <p>Total alerts recorded: <strong>{{ alert_count }}</strong></p>
+    <a href="{% url 'temperature_logs' booking.pk %}">View All Temperature Logs →</a>
+</section>
+
+<section>
+    <h2>🌡️ Latest Readings</h2>
+    <table border="1">
+        <thead><tr><th>Sensor</th><th>Temp</th><th>Humidity</th><th>Alert</th><th>Time</th></tr></thead>
+        <tbody>
+            {% for log in temp_logs %}
+            <tr>
+                <td>{{ log.sensor_id }}</td>
+                <td>{{ log.temperature_celsius }}°C</td>
+                <td>{{ log.humidity_percent|default:"—" }}%</td>
+                <td>{{ log.get_alert_level_display }}</td>
+                <td>{{ log.recorded_at|date:"d M Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No temperature data yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

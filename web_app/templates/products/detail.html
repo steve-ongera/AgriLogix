@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<h1>{{ product.name }}</h1>
+<p>{{ product.get_status_display }} | Views: {{ product.views_count }}</p>
+
+<section>
+    <h2>Product Info</h2>
+    <table border="1">
+        <tr><th>Farm</th><td><a href="{% url 'farm_detail' product.farm.pk %}">{{ product.farm.name }}</a></td></tr>
+        <tr><th>Farmer</th><td>{{ product.farm.owner.get_full_name }}</td></tr>
+        <tr><th>Category</th><td>{{ product.category.icon }} {{ product.category.name }}</td></tr>
+        <tr><th>Variety</th><td>{{ product.variety|default:"—" }}</td></tr>
+        <tr><th>Quantity Available</th><td>{{ product.quantity_available }} {{ product.unit }}</td></tr>
+        <tr><th>Price</th><td>KES {{ product.price_per_unit }} / {{ product.unit }}</td></tr>
+        <tr><th>Min Order</th><td>{{ product.minimum_order_quantity }} {{ product.unit }}</td></tr>
+        <tr><th>Harvest Date</th><td>{{ product.harvest_date }}</td></tr>
+        <tr><th>Expiry Date</th><td>{{ product.expiry_date|default:"—" }}</td></tr>
+        <tr><th>Organic</th><td>{{ product.is_organic|yesno:"Yes,No" }}</td></tr>
+        <tr><th>Certified</th><td>{{ product.is_certified|yesno:"Yes,No" }}</td></tr>
+        <tr><th>Cold Chain Required</th><td>{{ product.category.requires_cold_chain|yesno:"Yes,No" }}</td></tr>
+    </table>
+    <p>{{ product.description }}</p>
+</section>
+
+{% if user.role == 'buyer' %}
+<section>
+    <a href="{% url 'order_create' product.pk %}">
+        <button>🛒 Place Order</button>
+    </a>
+</section>
+{% endif %}
+
+{% if user == product.farm.owner %}
+<p>
+    <a href="{% url 'product_edit' product.pk %}">✏️ Edit</a> |
+    <a href="{% url 'product_delete' product.pk %}">🗑️ Remove Listing</a>
+</p>
+{% endif %}
+
+<section>
+    <h2>📊 Market Price Comparison</h2>
+    {% if market_prices %}
+    <table border="1">
+        <thead>
+            <tr><th>Market</th><th>Price/kg (KES)</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for mp in market_prices %}
+            <tr>
+                <td>{{ mp.get_market_display }}</td>
+                <td>{{ mp.price_per_kg }}</td>
+                <td>{{ mp.recorded_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No market price data available.</p>
+    {% endif %}
+</section>
+
+<section>
+    <h2>📈 Price History</h2>
+    {% if price_history %}
+    <table border="1">
+        <thead>
+            <tr><th>Farm Price (KES)</th><th>Market Price (KES)</th><th>Notes</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for ph in price_history %}
+            <tr>
+                <td>{{ ph.price }}</td>
+                <td>{{ ph.market_price|default:"—" }}</td>
+                <td>{{ ph.notes|default:"—" }}</td>
+                <td>{{ ph.recorded_at|date:"d M Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No price history yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

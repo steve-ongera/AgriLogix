@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<h1>👤 My Profile</h1>
+
+<section>
+    <h2>Current Details</h2>
+    <p>Name: {{ user.get_full_name }}</p>
+    <p>Username: {{ user.username }}</p>
+    <p>Email: {{ user.email }}</p>
+    <p>Phone: {{ user.phone }}</p>
+    <p>Role: {{ user.get_role_display }}</p>
+    <p>Location: {{ user.location }}</p>
+    <p>Verified: {{ user.is_verified|yesno:"Yes,No" }}</p>
+    <p>Rating: {{ user.rating }}/5.00</p>
+    <p>Total Transactions: {{ user.total_transactions }}</p>
+    <p>Member Since: {{ user.created_at|date:"d M Y" }}</p>
+</section>
+
+<section>
+    <h2>Edit Profile</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>First Name <input type="text" name="first_name" value="{{ user.first_name }}"></label><br>
+        <label>Last Name <input type="text" name="last_name" value="{{ user.last_name }}"></label><br>
+        <label>Email <input type="email" name="email" value="{{ user.email }}"></label><br>
+        <label>Phone <input type="tel" name="phone" value="{{ user.phone }}"></label><br>
+        <label>Location <input type="text" name="location" value="{{ user.location }}"></label><br>
+        <label>Profile Photo <input type="file" name="profile_photo" accept="image/*"></label><br>
+        <button type="submit">Save Changes</button>
+    </form>
+</section>
+
+{% if farmer_profile %}
+<section>
+    <h2>🌾 Farmer Profile</h2>
+    <p>Cooperative: {{ farmer_profile.cooperative_name }}</p>
+    <p>Experience: {{ farmer_profile.years_experience }} years</p>
+    <p>Preferred Payment: {{ farmer_profile.get_preferred_payment_display }}</p>
+    <p>M-Pesa: {{ farmer_profile.mpesa_number }}</p>
+    <p>Total Sales: KES {{ farmer_profile.total_sales|floatformat:0 }}</p>
+    <p>Savings vs Middlemen: KES {{ farmer_profile.savings_vs_middleman|floatformat:0 }}</p>
+    <p>Premium: {{ farmer_profile.is_premium|yesno:"Yes,No" }}</p>
+</section>
+{% endif %}
+
+{% if farms %}
+<section>
+    <h2>My Farms</h2>
+    <ul>
+        {% for farm in farms %}
+            <li><a href="{% url 'farm_detail' farm.pk %}">{{ farm.name }}</a> — {{ farm.location_name }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{% endblock %}

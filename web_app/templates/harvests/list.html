@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Harvest Schedules{% endblock %}
+
+{% block content %}
+<h1>📅 My Harvest Schedules</h1>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Product</th><th>Farm</th><th>Expected (kg)</th>
+            <th>Harvest Date</th><th>Pickup Date</th><th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for h in harvests %}
+        <tr>
+            <td>{{ h.product_name }}</td>
+            <td><a href="{% url 'farm_detail' h.farm.pk %}">{{ h.farm.name }}</a></td>
+            <td>{{ h.expected_quantity_kg }}</td>
+            <td>{{ h.harvest_date }}</td>
+            <td>{{ h.ready_for_pickup_date }}</td>
+            <td>{{ h.get_status_display }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No harvest schedules found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Register Farm{% endblock %}
+
+{% block content %}
+<h1>🌾 Register New Farm</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <fieldset>
+        <legend>Basic Info</legend>
+        <label>Farm Name <input type="text" name="name" required></label><br>
+        <label>Farm Type
+            <select name="farm_type" required>
+                {% for value, label in farm_types %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label><br>
+        <label>Description <textarea name="description" rows="3"></textarea></label><br>
+        <label>Size (acres) <input type="number" name="size_acres" step="0.01" required></label><br>
+        <label>Photo <input type="file" name="photo" accept="image/*"></label><br>
+    </fieldset>
+
+    <fieldset>
+        <legend>Location</legend>
+        <label>Location Name (e.g. Molo, Nakuru County) <input type="text" name="location_name" required></label><br>
+        <label>Latitude <input type="number" name="latitude" step="0.000001" required></label><br>
+        <label>Longitude <input type="number" name="longitude" step="0.000001" required></label><br>
+        <label>Nearest Town <input type="text" name="nearest_town" required></label><br>
+        <label>Distance to Road (km) <input type="number" name="distance_to_road_km" step="0.1" value="0"></label><br>
+    </fieldset>
+
+    <fieldset>
+        <legend>Infrastructure</legend>
+        <label><input type="checkbox" name="has_storage"> Has On-Farm Storage</label><br>
+        <label><input type="checkbox" name="has_electricity"> Has Electricity</label><br>
+        <label>Water Source <input type="text" name="water_source" placeholder="e.g. Borehole, River"></label><br>
+        <label>Certification <input type="text" name="certification" placeholder="e.g. Kenya GAP, Organic Kenya"></label><br>
+    </fieldset>
+
+    <button type="submit">Register Farm</button>
+    <a href="{% url 'dashboard' %}">Cancel</a>
+</form>
+{% endblock %}

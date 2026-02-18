@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Shipments{% endblock %}
+
+{% block content %}
+<h1>🚛 Shipments</h1>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Code</th><th>Driver</th><th>Vehicle</th><th>Pickup</th>
+            <th>Delivery</th><th>Weight (kg)</th><th>Cost</th><th>Status</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for shipment in shipments %}
+        <tr>
+            <td>{{ shipment.shipment_code }}</td>
+            <td>{{ shipment.driver.get_full_name|default:"Unassigned" }}</td>
+            <td>{{ shipment.vehicle.plate_number|default:"—" }}</td>
+            <td>{{ shipment.pickup_address|truncatechars:30 }}</td>
+            <td>{{ shipment.delivery_address|truncatechars:30 }}</td>
+            <td>{{ shipment.weight_kg }}</td>
+            <td>KES {{ shipment.shipping_cost|floatformat:0 }}</td>
+            <td>{{ shipment.get_status_display }}</td>
+            <td><a href="{% url 'shipment_detail' shipment.pk %}">View</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9">No shipments found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

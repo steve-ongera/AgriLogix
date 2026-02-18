@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Cold Storage Facilities{% endblock %}
+
+{% block content %}
+<h1>❄️ Cold Storage Facilities</h1>
+
+<form method="get">
+    <label>Location <input type="text" name="location" value="{{ request.GET.location }}"></label>
+    <label>Min Temp (°C) <input type="number" name="min_temp" value="{{ request.GET.min_temp }}"></label>
+    <label>Max Temp (°C) <input type="number" name="max_temp" value="{{ request.GET.max_temp }}"></label>
+    <button type="submit">Search</button>
+    <a href="{% url 'cold_storage_list' %}">Clear</a>
+</form>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Facility</th><th>Location</th><th>Available (T)</th><th>Total (T)</th>
+            <th>Temp Range</th><th>Cost/Tonne/Day</th><th>Generator</th><th>Status</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for f in facilities %}
+        <tr>
+            <td><a href="{% url 'cold_storage_detail' f.pk %}">{{ f.name }}</a></td>
+            <td>{{ f.location_name }}</td>
+            <td>{{ f.available_capacity_tonnes }}</td>
+            <td>{{ f.total_capacity_tonnes }}</td>
+            <td>{{ f.min_temperature_celsius }}°C to {{ f.max_temperature_celsius }}°C</td>
+            <td>KES {{ f.cost_per_tonne_per_day }}</td>
+            <td>{{ f.has_backup_generator|yesno:"Yes,No" }}</td>
+            <td>{{ f.get_status_display }}</td>
+            <td>
+                <a href="{% url 'cold_storage_detail' f.pk %}">View</a> |
+                <a href="{% url 'cold_storage_book' f.pk %}">Book</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9">No facilities found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Report a Loss{% endblock %}
+
+{% block content %}
+<h1>📉 Report Post-Harvest Loss</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <label>Farm
+        <select name="farm" required>
+            {% for farm in farms %}
+                <option value="{{ farm.pk }}">{{ farm.name }}</option>
+            {% endfor %}
+        </select>
+    </label><br>
+    <label>Product Name <input type="text" name="product_name" required></label><br>
+    <label>Quantity Lost (kg) <input type="number" name="quantity_lost_kg" step="0.01" required></label><br>
+    <label>Estimated Value Lost (KES) <input type="number" name="estimated_value_lost" step="0.01" required></label><br>
+    <label>Primary Cause
+        <select name="primary_cause" required>
+            {% for value, label in causes %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label><br>
+    <label>Description <textarea name="description" rows="4"></textarea></label><br>
+    <label><input type="checkbox" name="was_cold_chain_used"> Cold Chain Was Used</label><br>
+    <label>Incident Date <input type="date" name="incident_date" required></label><br>
+    <button type="submit">Submit Report</button>
+    <a href="{% url 'loss_report_list' %}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Products{% endblock %}
+
+{% block content %}
+<h1>🥦 Available Produce</h1>
+
+<form method="get">
+    <label>Category
+        <select name="category">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat.pk }}" {% if request.GET.category == cat.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ cat.icon }} {{ cat.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </label>
+    <label><input type="checkbox" name="organic" {% if request.GET.organic %}checked{% endif %}> Organic Only</label>
+    <label>Min Price <input type="number" name="min_price" value="{{ request.GET.min_price }}" step="1"></label>
+    <label>Max Price <input type="number" name="max_price" value="{{ request.GET.max_price }}" step="1"></label>
+    <label>Search <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Product, farm, location..."></label>
+    <button type="submit">Search</button>
+    <a href="{% url 'product_list' %}">Clear</a>
+</form>
+
+{% if user.role == 'farmer' %}
+    <a href="{% url 'product_create' %}">+ List New Product</a>
+{% endif %}
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Product</th><th>Farm</th><th>Location</th><th>Category</th>
+            <th>Qty</th><th>Unit</th><th>Price (KES)</th>
+            <th>Organic</th><th>Certified</th><th>Harvest Date</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></td>
+            <td><a href="{% url 'farm_detail' product.farm.pk %}">{{ product.farm.name }}</a></td>
+            <td>{{ product.farm.location_name }}</td>
+            <td>{{ product.category.icon }} {{ product.category.name }}</td>
+            <td>{{ product.quantity_available }}</td>
+            <td>{{ product.unit }}</td>
+            <td>{{ product.price_per_unit }}</td>
+            <td>{{ product.is_organic|yesno:"✅,—" }}</td>
+            <td>{{ product.is_certified|yesno:"✅,—" }}</td>
+            <td>{{ product.harvest_date }}</td>
+            <td>
+                <a href="{% url 'product_detail' product.pk %}">View</a>
+                {% if user.role == 'buyer' %}
+                    | <a href="{% url 'order_create' product.pk %}">Order</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="11">No products found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

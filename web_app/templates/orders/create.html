@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Place Order{% endblock %}
+
+{% block content %}
+<h1>🛒 Place Order</h1>
+
+<section>
+    <h2>Product: {{ product.name }}</h2>
+    <p>Farm: {{ product.farm.name }} | Location: {{ product.farm.location_name }}</p>
+    <p>Available: {{ product.quantity_available }} {{ product.unit }}</p>
+    <p>Price: KES {{ product.price_per_unit }} / {{ product.unit }}</p>
+    <p>Min Order: {{ product.minimum_order_quantity }} {{ product.unit }}</p>
+    {% if product.category.requires_cold_chain %}
+        <p>❄️ This product requires cold chain logistics.</p>
+    {% endif %}
+</section>
+
+<form method="post">
+    {% csrf_token %}
+    <label>Quantity ({{ product.unit }})
+        <input type="number" name="quantity" step="0.01" min="{{ product.minimum_order_quantity }}" required>
+    </label><br>
+    <label>Payment Method
+        <select name="payment_method">
+            {% for value, label in payment_methods %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label><br>
+    <label>Delivery Address
+        <input type="text" name="delivery_address" required placeholder="Full delivery address">
+    </label><br>
+    <label>Requested Delivery Date
+        <input type="date" name="requested_delivery_date">
+    </label><br>
+    <label>Estimated Shipping Cost (KES)
+        <input type="number" name="shipping_cost" step="0.01" value="0">
+    </label><br>
+    <label>Notes for Farmer
+        <textarea name="buyer_notes" rows="2"></textarea>
+    </label><br>
+
+    {% if cold_chain_routes %}
+    <section>
+        <h3>❄️ Available Cold Chain Routes</h3>
+        <table border="1">
+            <thead><tr><th>Route</th><th>Distance</th><th>Duration</th><th>Cost/kg</th></tr></thead>
+            <tbody>
+                {% for route in cold_chain_routes %}
+                <tr>
+                    <td>{{ route.origin_name }} → {{ route.destination_name }}</td>
+                    <td>{{ route.distance_km }} km</td>
+                    <td>{{ route.estimated_duration_hours }} hrs</td>
+                    <td>KES {{ route.base_cost_per_kg }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+
+    <button type="submit">Place Order</button>
+    <a href="{% url 'product_detail' product.pk %}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Book Cold Storage{% endblock %}
+
+{% block content %}
+<h1>❄️ Book Cold Storage</h1>
+<h2>{{ facility.name }} — {{ facility.location_name }}</h2>
+
+<p>Available: {{ facility.available_capacity_tonnes }} tonnes</p>
+<p>Temp Range: {{ facility.min_temperature_celsius }}°C to {{ facility.max_temperature_celsius }}°C</p>
+<p>Rate: KES {{ facility.cost_per_tonne_per_day }} per tonne per day</p>
+
+<form method="post">
+    {% csrf_token %}
+    <label>Product Description <input type="text" name="product_description" required></label><br>
+    <label>Quantity (tonnes) <input type="number" name="quantity_tonnes" step="0.001" required></label><br>
+    <label>Required Min Temp (°C) <input type="number" name="required_temp_min" required></label><br>
+    <label>Required Max Temp (°C) <input type="number" name="required_temp_max" required></label><br>
+    <label>Start Date <input type="date" name="start_date" required></label><br>
+    <label>End Date <input type="date" name="end_date" required></label><br>
+    <label>Notes <textarea name="notes" rows="2"></textarea></label><br>
+    <button type="submit">Confirm Booking</button>
+    <a href="{% url 'cold_storage_detail' facility.pk %}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Edit {{ farm.name }}{% endblock %}
+
+{% block content %}
+<h1>✏️ Edit Farm: {{ farm.name }}</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label>Farm Name <input type="text" name="name" value="{{ farm.name }}" required></label><br>
+    <label>Farm Type
+        <select name="farm_type">
+            {% for value, label in farm_types %}
+                <option value="{{ value }}" {% if farm.farm_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label><br>
+    <label>Description <textarea name="description" rows="3">{{ farm.description }}</textarea></label><br>
+    <label>Size (acres) <input type="number" name="size_acres" step="0.01" value="{{ farm.size_acres }}"></label><br>
+    <label>Location Name <input type="text" name="location_name" value="{{ farm.location_name }}"></label><br>
+    <label>Nearest Town <input type="text" name="nearest_town" value="{{ farm.nearest_town }}"></label><br>
+    <label><input type="checkbox" name="has_storage" {% if farm.has_storage %}checked{% endif %}> Has Storage</label><br>
+    <label><input type="checkbox" name="has_electricity" {% if farm.has_electricity %}checked{% endif %}> Has Electricity</label><br>
+    <label>Water Source <input type="text" name="water_source" value="{{ farm.water_source }}"></label><br>
+    <label>Certification <input type="text" name="certification" value="{{ farm.certification }}"></label><br>
+    <label>Photo <input type="file" name="photo" accept="image/*"></label><br>
+    <button type="submit">Save Changes</button>
+    <a href="{% url 'farm_detail' farm.pk %}">Cancel</a>
+</form>
+{% endblock %}

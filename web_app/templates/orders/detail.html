@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}Order {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<h1>📦 Order #{{ order.order_number }}</h1>
+<p>Status: {{ order.get_status_display }} | Date: {{ order.created_at|date:"d M Y H:i" }}</p>
+
+<section>
+    <h2>Parties</h2>
+    <p>Buyer: {{ order.buyer.get_full_name }} ({{ order.buyer.email }})</p>
+    <p>Farmer: {{ order.farmer.get_full_name }} ({{ order.farmer.phone }})</p>
+</section>
+
+<section>
+    <h2>Order Items</h2>
+    <table border="1">
+        <thead>
+            <tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th><th>Cold Chain</th></tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td><a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a></td>
+                <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                <td>KES {{ item.unit_price }}</td>
+                <td>KES {{ item.subtotal|floatformat:0 }}</td>
+                <td>{{ item.requires_cold_chain|yesno:"Yes,No" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>Financials</h2>
+    <table border="1">
+        <tr><th>Subtotal</th><td>KES {{ order.subtotal|floatformat:2 }}</td></tr>
+        <tr><th>Shipping</th><td>KES {{ order.shipping_cost|floatformat:2 }}</td></tr>
+        <tr><th>Platform Fee (2.5%)</th><td>KES {{ order.platform_fee|floatformat:2 }}</td></tr>
+        <tr><th>Total</th><td><strong>KES {{ order.total_amount|floatformat:2 }}</strong></td></tr>
+        <tr><th>Farmer Earnings</th><td>KES {{ order.farmer_earnings|floatformat:2 }}</td></tr>
+        <tr><th>Payment Method</th><td>{{ order.get_payment_method_display }}</td></tr>
+        <tr><th>Payment Ref</th><td>{{ order.payment_reference|default:"—" }}</td></tr>
+    </table>
+</section>
+
+<section>
+    <h2>Delivery</h2>
+    <p>Address: {{ order.delivery_address }}</p>
+    <p>Requested By: {{ order.requested_delivery_date|default:"ASAP" }}</p>
+    <p>Notes: {{ order.buyer_notes|default:"—" }}</p>
+</section>
+
+{% if shipment %}
+<section>
+    <h2>🚛 Shipment: {{ shipment.shipment_code }}</h2>
+    <p>Driver: {{ shipment.driver.get_full_name }}</p>
+    <p>Vehicle: {{ shipment.vehicle.plate_number }}</p>
+    <p>Status: {{ shipment.get_status_display }}</p>
+    <p>Pickup: {{ shipment.actual_pickup|default:"Pending" }}</p>
+    <p>Delivered: {{ shipment.actual_delivery|default:"Pending" }}</p>
+    <a href="{% url 'shipment_detail' shipment.pk %}">Track Shipment →</a>
+
+    {% if tracking %}
+    <h3>Tracking Events</h3>
+    <table border="1">
+        <thead><tr><th>Note</th><th>Speed</th><th>Time</th></tr></thead>
+        <tbody>
+            {% for t in tracking %}
+            <tr>
+                <td>{{ t.status_note }}</td>
+                <td>{{ t.speed_kmh }} km/h</td>
+                <td>{{ t.timestamp|date:"d M H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</section>
+{% endif %}
+
+<!-- ACTIONS -->
+{% if order.status == 'pending' and user == order.farmer %}
+<section>
+    <h2>Farmer Actions</h2>
+    <form method="post" action="{% url 'order_confirm' order.pk %}">
+        {% csrf_token %}
+        <textarea name="farmer_notes" placeholder="Add notes to buyer..." rows="2"></textarea><br>
+        <button name="action" value="confirm">✅ Confirm Order</button>
+        <button name="action" value="cancel">❌ Cancel Order</button>
+    </form>
+</section>
+{% endif %}
+
+{% if user.role == 'admin' or user == order.farmer %}
+<section>
+    <h2>Update Status</h2>
+    <form method="post" action="{% url 'order_update_status' order.pk %}">
+        {% csrf_token %}
+        <select name="status">
+            <option value="confirmed">Confirmed</option>
+            <option value="processing">Processing</option>
+            <option value="dispatched">Dispatched</option>
+            <option value="delivered">Delivered</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+        </select>
+        <button type="submit">Update</button>
+    </form>
+</section>
+{% endif %}
+
+{% if order.status not in 'cancelled,completed,disputed' %}
+<section>
+    <h2>⚠️ Disputes</h2>
+    {% if disputes %}
+        {% for d in disputes %}
+            <p>{{ d.get_reason_display }} — {{ d.get_status_display }} — {{ d.created_at|date:"d M Y" }}</p>
+        {% endfor %}
+    {% else %}
+        {% if user == order.buyer or user == order.farmer %}
+            <a href="{% url 'dispute_create' order.pk %}">Raise a Dispute</a>
+        {% endif %}
+    {% endif %}
+</section>
+{% endif %}
+
+{% endblock %}

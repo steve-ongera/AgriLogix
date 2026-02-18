@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Raise Dispute{% endblock %}
+
+{% block content %}
+<h1>⚠️ Raise Dispute</h1>
+<h2>Order #{{ order.order_number }}</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label>Reason
+        <select name="reason" required>
+            {% for value, label in reasons %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label><br>
+    <label>Description
+        <textarea name="description" rows="5" required placeholder="Describe the issue in detail..."></textarea>
+    </label><br>
+    <label>Evidence Photo (optional)
+        <input type="file" name="evidence_photo" accept="image/*">
+    </label><br>
+    <button type="submit">Submit Dispute</button>
+    <a href="{% url 'order_detail' order.pk %}">Cancel</a>
+</form>
+{% endblock %}

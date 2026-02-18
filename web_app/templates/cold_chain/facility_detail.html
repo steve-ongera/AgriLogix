@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}{{ facility.name }}{% endblock %}
+
+{% block content %}
+<h1>❄️ {{ facility.name }}</h1>
+<p>Operator: {{ facility.operator.get_full_name }} | Status: {{ facility.get_status_display }}</p>
+
+<section>
+    <h2>Facility Details</h2>
+    <table border="1">
+        <tr><th>Location</th><td>{{ facility.location_name }}</td></tr>
+        <tr><th>Total Capacity</th><td>{{ facility.total_capacity_tonnes }} tonnes</td></tr>
+        <tr><th>Available</th><td>{{ facility.available_capacity_tonnes }} tonnes</td></tr>
+        <tr><th>Utilization</th><td>{{ facility.utilization_percent }}%</td></tr>
+        <tr><th>Temperature Range</th><td>{{ facility.min_temperature_celsius }}°C to {{ facility.max_temperature_celsius }}°C</td></tr>
+        <tr><th>Cost Per Tonne/Day</th><td>KES {{ facility.cost_per_tonne_per_day }}</td></tr>
+        <tr><th>Backup Generator</th><td>{{ facility.has_backup_generator|yesno:"Yes,No" }}</td></tr>
+        <tr><th>Certification</th><td>{{ facility.certification|default:"None" }}</td></tr>
+        <tr><th>GPS</th><td>{{ facility.latitude }}, {{ facility.longitude }}</td></tr>
+    </table>
+    <a href="{% url 'cold_storage_book' facility.pk %}"><button>📅 Book Storage</button></a>
+</section>
+
+<section>
+    <h2>Active Bookings</h2>
+    <table border="1">
+        <thead>
+            <tr><th>Product</th><th>Booked By</th><th>Qty (T)</th><th>From</th><th>To</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.product_description }}</td>
+                <td>{{ booking.booked_by.get_full_name }}</td>
+                <td>{{ booking.quantity_tonnes }}</td>
+                <td>{{ booking.start_date }}</td>
+                <td>{{ booking.end_date }}</td>
+                <td>{{ booking.get_status_display }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6">No active bookings.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>🌡️ Recent Temperature Readings</h2>
+    <table border="1">
+        <thead><tr><th>Sensor</th><th>Temp (°C)</th><th>Humidity</th><th>Alert</th><th>Time</th></tr></thead>
+        <tbody>
+            {% for log in recent_temps %}
+            <tr>
+                <td>{{ log.sensor_id }}</td>
+                <td>{{ log.temperature_celsius }}</td>
+                <td>{{ log.humidity_percent|default:"—" }}%</td>
+                <td>{{ log.get_alert_level_display }}</td>
+                <td>{{ log.recorded_at|date:"d M Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No temperature data.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

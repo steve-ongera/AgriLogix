@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Edit {{ product.name }}{% endblock %}
+
+{% block content %}
+<h1>✏️ Edit: {{ product.name }}</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label>Name <input type="text" name="name" value="{{ product.name }}"></label><br>
+    <label>Variety <input type="text" name="variety" value="{{ product.variety }}"></label><br>
+    <label>Description <textarea name="description" rows="3">{{ product.description }}</textarea></label><br>
+    <label>Quantity Available <input type="number" name="quantity_available" step="0.01" value="{{ product.quantity_available }}"></label><br>
+    <label>Price Per Unit (KES) <input type="number" name="price_per_unit" step="0.01" value="{{ product.price_per_unit }}"></label><br>
+    <label>Expiry Date <input type="date" name="expiry_date" value="{{ product.expiry_date|date:'Y-m-d' }}"></label><br>
+    <label><input type="checkbox" name="is_organic" {% if product.is_organic %}checked{% endif %}> Organic</label><br>
+    <label>Status
+        <select name="status">
+            {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if product.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label><br>
+    <label>Photo <input type="file" name="photo" accept="image/*"></label><br>
+    <button type="submit">Save Changes</button>
+    <a href="{% url 'product_detail' product.pk %}">Cancel</a>
+</form>
+{% endblock %}

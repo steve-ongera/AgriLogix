@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<nav>
+    <a href="{% url 'dashboard' %}">Home</a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<h1>Welcome, {{ user.get_full_name|default:user.username }} 👋</h1>
+<p>Role: {{ user.get_role_display }}</p>
+
+<!-- ========== FARMER DASHBOARD ========== -->
+{% if user.role == 'farmer' %}
+
+    <section>
+        <h2>📊 My Stats</h2>
+        <ul>
+            <li>Available Products: <strong>{{ total_products }}</strong></li>
+            <li>Pending Orders: <strong>{{ pending_orders }}</strong></li>
+            <li>Total Earnings: <strong>KES {{ total_earnings|floatformat:0 }}</strong></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>🌾 My Farms</h2>
+        {% if farms %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Farm</th><th>Type</th><th>Location</th><th>Size (Acres)</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for farm in farms %}
+                    <tr>
+                        <td><a href="{% url 'farm_detail' farm.pk %}">{{ farm.name }}</a></td>
+                        <td>{{ farm.get_farm_type_display }}</td>
+                        <td>{{ farm.location_name }}</td>
+                        <td>{{ farm.size_acres }}</td>
+                        <td>
+                            <a href="{% url 'farm_edit' farm.pk %}">Edit</a> |
+                            <a href="{% url 'farm_detail' farm.pk %}">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No farms registered yet. <a href="{% url 'farm_create' %}">Register your first farm →</a></p>
+        {% endif %}
+        <a href="{% url 'farm_create' %}">+ Add New Farm</a>
+    </section>
+
+    <section>
+        <h2>📅 Upcoming Harvests</h2>
+        {% if harvest_schedules %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Product</th><th>Farm</th><th>Harvest Date</th><th>Ready For Pickup</th><th>Qty (kg)</th><th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in harvest_schedules %}
+                    <tr>
+                        <td>{{ h.product_name }}</td>
+                        <td>{{ h.farm.name }}</td>
+                        <td>{{ h.harvest_date }}</td>
+                        <td>{{ h.ready_for_pickup_date }}</td>
+                        <td>{{ h.expected_quantity_kg }}</td>
+                        <td>{{ h.get_status_display }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No upcoming harvests.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>📦 Recent Orders</h2>
+        {% if recent_orders %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Order #</th><th>Buyer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td><a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a></td>
+                        <td>{{ order.buyer.get_full_name }}</td>
+                        <td>KES {{ order.total_amount|floatformat:0 }}</td>
+                        <td>{{ order.get_status_display }}</td>
+                        <td>{{ order.created_at|date:"d M Y" }}</td>
+                        <td><a href="{% url 'order_detail' order.pk %}">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No orders yet.</p>
+        {% endif %}
+    </section>
+
+<!-- ========== BUYER DASHBOARD ========== -->
+{% elif user.role == 'buyer' %}
+
+    <section>
+        <h2>📊 My Stats</h2>
+        <ul>
+            <li>Active Orders: <strong>{{ active_orders }}</strong></li>
+            <li>Completed Orders: <strong>{{ completed_orders }}</strong></li>
+            <li>Total Spent: <strong>KES {{ total_spent|floatformat:0 }}</strong></li>
+        </ul>
+        <a href="{% url 'product_list' %}">Browse Available Produce →</a>
+    </section>
+
+    <section>
+        <h2>🥦 Featured Products</h2>
+        {% if featured_products %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Product</th><th>Farm</th><th>Price/Unit</th><th>Unit</th><th>Qty Available</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in featured_products %}
+                    <tr>
+                        <td><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></td>
+                        <td>{{ product.farm.name }}</td>
+                        <td>KES {{ product.price_per_unit }}</td>
+                        <td>{{ product.unit }}</td>
+                        <td>{{ product.quantity_available }}</td>
+                        <td>
+                            <a href="{% url 'product_detail' product.pk %}">View</a> |
+                            <a href="{% url 'order_create' product.pk %}">Order</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>📦 Recent Orders</h2>
+        {% if recent_orders %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Order #</th><th>Farmer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td>{{ order.order_number }}</td>
+                        <td>{{ order.farmer.get_full_name }}</td>
+                        <td>KES {{ order.total_amount|floatformat:0 }}</td>
+                        <td>{{ order.get_status_display }}</td>
+                        <td>{{ order.created_at|date:"d M Y" }}</td>
+                        <td><a href="{% url 'order_detail' order.pk %}">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
+
+<!-- ========== DRIVER DASHBOARD ========== -->
+{% elif user.role == 'driver' %}
+
+    <section>
+        <h2>📊 My Stats</h2>
+        <ul>
+            <li>Completed Shipments: <strong>{{ completed_shipments }}</strong></li>
+            <li>Total Earnings: <strong>KES {{ total_earnings|floatformat:0 }}</strong></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>🚛 Active Shipments</h2>
+        {% if active_shipments %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Code</th><th>Pickup</th><th>Delivery</th><th>Weight (kg)</th><th>Status</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in active_shipments %}
+                    <tr>
+                        <td>{{ s.shipment_code }}</td>
+                        <td>{{ s.pickup_address }}</td>
+                        <td>{{ s.delivery_address }}</td>
+                        <td>{{ s.weight_kg }}</td>
+                        <td>{{ s.get_status_display }}</td>
+                        <td><a href="{% url 'shipment_detail' s.pk %}">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No active shipments.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>🚗 My Vehicles</h2>
+        {% for vehicle in my_vehicles %}
+            <p>{{ vehicle.plate_number }} — {{ vehicle.get_vehicle_type_display }} | Status: {{ vehicle.get_status_display }}</p>
+        {% empty %}
+            <p>No vehicles registered. <a href="{% url 'vehicle_create' %}">Register vehicle →</a></p>
+        {% endfor %}
+    </section>
+
+<!-- ========== COLD STORAGE DASHBOARD ========== -->
+{% elif user.role == 'cold_storage' %}
+
+    <section>
+        <h2>❄️ My Facilities</h2>
+        {% for facility in facilities %}
+            <div>
+                <h3><a href="{% url 'cold_storage_detail' facility.pk %}">{{ facility.name }}</a></h3>
+                <p>Location: {{ facility.location_name }}</p>
+                <p>Available: {{ facility.available_capacity_tonnes }}T / {{ facility.total_capacity_tonnes }}T</p>
+                <p>Status: {{ facility.get_status_display }}</p>
+            </div>
+        {% empty %}
+            <p>No facilities registered.</p>
+        {% endfor %}
+        <p>Active Bookings: <strong>{{ active_bookings }}</strong></p>
+    </section>
+
+    <section>
+        <h2>🌡️ Recent Temperature Alerts</h2>
+        {% if temperature_alerts %}
+            <table border="1">
+                <thead>
+                    <tr><th>Sensor</th><th>Temperature</th><th>Alert</th><th>Time</th></tr>
+                </thead>
+                <tbody>
+                    {% for log in temperature_alerts %}
+                    <tr>
+                        <td>{{ log.sensor_id }}</td>
+                        <td>{{ log.temperature_celsius }}°C</td>
+                        <td>{{ log.get_alert_level_display }}</td>
+                        <td>{{ log.recorded_at|date:"d M Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No alerts. All temperatures normal ✅</p>
+        {% endif %}
+    </section>
+
+<!-- ========== ADMIN DASHBOARD ========== -->
+{% elif user.role == 'admin' %}
+
+    <section>
+        <h2>📊 Platform Overview</h2>
+        <ul>
+            <li>Total Farmers: <strong>{{ total_farmers }}</strong></li>
+            <li>Total Buyers: <strong>{{ total_buyers }}</strong></li>
+            <li>Total Orders: <strong>{{ total_orders }}</strong></li>
+            <li>Total GMV: <strong>KES {{ total_gmv|floatformat:0 }}</strong></li>
+            <li>Open Disputes: <strong>{{ pending_disputes }}</strong></li>
+        </ul>
+        <a href="{% url 'analytics_dashboard' %}">View Full Analytics →</a> |
+        <a href="{% url 'dispute_list' %}">Manage Disputes →</a>
+    </section>
+
+    <section>
+        <h2>📈 Last 7 Days Metrics</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Date</th><th>Orders</th><th>GMV (KES)</th>
+                    <th>Farmer Earnings</th><th>Savings vs Middlemen</th>
+                    <th>Cold Chain Trips</th><th>Spoilage Prevented (kg)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in recent_metrics %}
+                <tr>
+                    <td>{{ m.date }}</td>
+                    <td>{{ m.completed_orders }}/{{ m.total_orders }}</td>
+                    <td>{{ m.total_gmv|floatformat:0 }}</td>
+                    <td>{{ m.total_farmer_earnings|floatformat:0 }}</td>
+                    <td>{{ m.total_middleman_savings|floatformat:0 }}</td>
+                    <td>{{ m.cold_chain_trips }}</td>
+                    <td>{{ m.spoilage_prevented_kg }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>🔴 Critical Temperature Alerts</h2>
+        {% if critical_alerts %}
+            <table border="1">
+                <thead>
+                    <tr><th>Sensor</th><th>Temp</th><th>Time</th></tr>
+                </thead>
+                <tbody>
+                    {% for alert in critical_alerts %}
+                    <tr>
+                        <td>{{ alert.sensor_id }}</td>
+                        <td>{{ alert.temperature_celsius }}°C</td>
+                        <td>{{ alert.recorded_at|date:"d M Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No critical alerts ✅</p>
+        {% endif %}
+    </section>
+
+{% endif %}
+
+<!-- NOTIFICATIONS PREVIEW (all roles) -->
+{% if notifications %}
+<section>
+    <h2>🔔 Unread Notifications</h2>
+    <ul>
+        {% for n in notifications %}
+            <li>
+                <strong>{{ n.title }}</strong> — {{ n.message|truncatewords:12 }}
+                <small>{{ n.created_at|timesince }} ago</small>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'notification_list' %}">View all notifications →</a>
+</section>
+{% endif %}
+
+{% endblock %}

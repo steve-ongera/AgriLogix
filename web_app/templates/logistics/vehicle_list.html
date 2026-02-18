@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Vehicles{% endblock %}
+
+{% block content %}
+<h1>🚛 Vehicles</h1>
+
+{% if user.role == 'driver' %}
+    <a href="{% url 'vehicle_create' %}">+ Register New Vehicle</a>
+{% endif %}
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Plate</th><th>Driver</th><th>Type</th><th>Capacity (kg)</th>
+            <th>Refrigerated</th><th>Status</th><th>Insurance Expiry</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vehicle in vehicles %}
+        <tr>
+            <td>{{ vehicle.plate_number }}</td>
+            <td>{{ vehicle.driver.get_full_name }}</td>
+            <td>{{ vehicle.get_vehicle_type_display }}</td>
+            <td>{{ vehicle.capacity_kg }}</td>
+            <td>{{ vehicle.is_refrigerated|yesno:"❄️ Yes,No" }}</td>
+            <td>{{ vehicle.get_status_display }}</td>
+            <td>{{ vehicle.insurance_expiry }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No vehicles found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

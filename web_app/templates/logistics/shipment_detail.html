@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Shipment {{ shipment.shipment_code }}{% endblock %}
+
+{% block content %}
+<h1>🚛 Shipment #{{ shipment.shipment_code }}</h1>
+<p>Status: {{ shipment.get_status_display }}</p>
+
+<section>
+    <h2>Details</h2>
+    <table border="1">
+        <tr><th>Driver</th><td>{{ shipment.driver.get_full_name|default:"Unassigned" }}</td></tr>
+        <tr><th>Vehicle</th><td>{{ shipment.vehicle.plate_number|default:"—" }} — {{ shipment.vehicle.get_vehicle_type_display|default:"" }}</td></tr>
+        <tr><th>Route</th><td>{{ shipment.route.name|default:"Custom Route" }}</td></tr>
+        <tr><th>Pickup Address</th><td>{{ shipment.pickup_address }}</td></tr>
+        <tr><th>Delivery Address</th><td>{{ shipment.delivery_address }}</td></tr>
+        <tr><th>Weight</th><td>{{ shipment.weight_kg }} kg</td></tr>
+        <tr><th>Shipping Cost</th><td>KES {{ shipment.shipping_cost|floatformat:0 }}</td></tr>
+        <tr><th>Scheduled Pickup</th><td>{{ shipment.scheduled_pickup|date:"d M Y H:i" }}</td></tr>
+        <tr><th>Actual Pickup</th><td>{{ shipment.actual_pickup|date:"d M Y H:i"|default:"Pending" }}</td></tr>
+        <tr><th>Delivered At</th><td>{{ shipment.actual_delivery|date:"d M Y H:i"|default:"Pending" }}</td></tr>
+        <tr><th>Driver Rating</th><td>{{ shipment.driver_rating|default:"Not rated" }}/5</td></tr>
+    </table>
+</section>
+
+{% if user == shipment.driver %}
+<section>
+    <h2>Update Status</h2>
+    <form method="post" action="{% url 'shipment_update_status' shipment.pk %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>New Status
+            <select name="status">
+                <option value="picked_up">Picked Up</option>
+                <option value="in_transit">In Transit</option>
+                <option value="at_cold_storage">At Cold Storage</option>
+                <option value="out_for_delivery">Out for Delivery</option>
+                <option value="delivered">Delivered</option>
+            </select>
+        </label><br>
+        <label>Your Latitude <input type="number" name="latitude" step="0.000001"></label><br>
+        <label>Your Longitude <input type="number" name="longitude" step="0.000001"></label><br>
+        <label>Speed (km/h) <input type="number" name="speed_kmh" step="0.1"></label><br>
+        <label>Proof of Delivery Photo <input type="file" name="proof_of_delivery_photo" accept="image/*"></label><br>
+        <button type="submit">Update</button>
+    </form>
+</section>
+{% endif %}
+
+<section>
+    <h2>📍 Tracking History</h2>
+    <table border="1">
+        <thead><tr><th>Note</th><th>Lat</th><th>Lng</th><th>Speed (km/h)</th><th>Time</th></tr></thead>
+        <tbody>
+            {% for t in tracking %}
+            <tr>
+                <td>{{ t.status_note }}</td>
+                <td>{{ t.latitude }}</td>
+                <td>{{ t.longitude }}</td>
+                <td>{{ t.speed_kmh }}</td>
+                <td>{{ t.timestamp|date:"d M Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No tracking data yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>🌡️ Temperature Logs</h2>
+    {% if temp_logs %}
+    <table border="1">
+        <thead><tr><th>Sensor</th><th>Temp (°C)</th><th>Humidity (%)</th><th>Alert</th><th>Time</th></tr></thead>
+        <tbody>
+            {% for log in temp_logs %}
+            <tr>
+                <td>{{ log.sensor_id }}</td>
+                <td>{{ log.temperature_celsius }}</td>
+                <td>{{ log.humidity_percent|default:"—" }}</td>
+                <td>{{ log.get_alert_level_display }}</td>
+                <td>{{ log.recorded_at|date:"d M Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No temperature logs for this shipment.</p>
+    {% endif %}
+</section>
+{% endblock %}

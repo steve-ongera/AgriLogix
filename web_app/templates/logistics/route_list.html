@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Logistics Routes{% endblock %}
+
+{% block content %}
+<h1>🗺️ Logistics Routes</h1>
+
+<form method="get">
+    <label><input type="checkbox" name="cold_chain" {% if request.GET.cold_chain %}checked{% endif %}> Cold Chain Only</label>
+    <button type="submit">Filter</button>
+    <a href="{% url 'route_list' %}">Show All</a>
+</form>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Route</th><th>Origin</th><th>Destination</th><th>Distance</th>
+            <th>Duration</th><th>Cost/kg (KES)</th><th>Cold Chain</th><th>Frequency</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for route in routes %}
+        <tr>
+            <td>{{ route.name }}</td>
+            <td>{{ route.origin_name }}</td>
+            <td>{{ route.destination_name }}</td>
+            <td>{{ route.distance_km }} km</td>
+            <td>{{ route.estimated_duration_hours }} hrs</td>
+            <td>{{ route.base_cost_per_kg }}</td>
+            <td>{{ route.is_cold_chain_available|yesno:"❄️ Yes,No" }}</td>
+            <td>{{ route.frequency }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">No routes available.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

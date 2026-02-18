@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Register Vehicle{% endblock %}
+
+{% block content %}
+<h1>🚛 Register Vehicle</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label>Vehicle Type
+        <select name="vehicle_type" required>
+            {% for value, label in vehicle_types %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label><br>
+    <label>Plate Number <input type="text" name="plate_number" required placeholder="e.g. KDJ 456K"></label><br>
+    <label>Make & Model <input type="text" name="make_model" required placeholder="e.g. Isuzu NPR"></label><br>
+    <label>Year <input type="number" name="year" min="1990" max="2025" required></label><br>
+    <label>Capacity (kg) <input type="number" name="capacity_kg" step="0.01" required></label><br>
+    <label><input type="checkbox" name="is_refrigerated" id="ref_check"> Refrigerated</label><br>
+    <div id="ref_fields">
+        <label>Min Temp (°C) <input type="number" name="refrigeration_min_temp"></label><br>
+        <label>Max Temp (°C) <input type="number" name="refrigeration_max_temp"></label><br>
+    </div>
+    <label>Insurance Expiry <input type="date" name="insurance_expiry" required></label><br>
+    <label>Inspection Expiry <input type="date" name="inspection_expiry" required></label><br>
+    <label>Photo <input type="file" name="photo" accept="image/*"></label><br>
+    <button type="submit">Register Vehicle</button>
+    <a href="{% url 'vehicle_list' %}">Cancel</a>
+</form>
+{% endblock %}

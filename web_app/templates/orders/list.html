@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Orders{% endblock %}
+
+{% block content %}
+<h1>📦 Orders</h1>
+
+<form method="get">
+    <label>Status
+        <select name="status">
+            <option value="">All Statuses</option>
+            {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <button type="submit">Filter</button>
+    <a href="{% url 'order_list' %}">Clear</a>
+</form>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Order #</th><th>Buyer</th><th>Farmer</th><th>Total (KES)</th>
+            <th>Status</th><th>Payment</th><th>Date</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td><a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a></td>
+            <td>{{ order.buyer.get_full_name }}</td>
+            <td>{{ order.farmer.get_full_name }}</td>
+            <td>{{ order.total_amount|floatformat:0 }}</td>
+            <td>{{ order.get_status_display }}</td>
+            <td>{{ order.get_payment_method_display }}</td>
+            <td>{{ order.created_at|date:"d M Y" }}</td>
+            <td><a href="{% url 'order_detail' order.pk %}">View</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">No orders found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

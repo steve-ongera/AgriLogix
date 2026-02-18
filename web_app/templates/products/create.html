@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}List New Product{% endblock %}
+
+{% block content %}
+<h1>🥦 List New Product</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <fieldset>
+        <legend>Product Details</legend>
+        <label>Farm
+            <select name="farm" required>
+                {% for farm in farms %}
+                    <option value="{{ farm.pk }}">{{ farm.name }}</option>
+                {% endfor %}
+            </select>
+        </label><br>
+        <label>Category
+            <select name="category" required>
+                {% for cat in categories %}
+                    <option value="{{ cat.pk }}">{{ cat.icon }} {{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </label><br>
+        <label>Product Name <input type="text" name="name" required></label><br>
+        <label>Variety <input type="text" name="variety"></label><br>
+        <label>Description <textarea name="description" rows="3"></textarea></label><br>
+        <label>Photo <input type="file" name="photo" accept="image/*"></label><br>
+    </fieldset>
+
+    <fieldset>
+        <legend>Inventory & Pricing</legend>
+        <label>Quantity Available <input type="number" name="quantity_available" step="0.01" required></label><br>
+        <label>Unit
+            <select name="unit">
+                {% for value, label in unit_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label><br>
+        <label>Price Per Unit (KES) <input type="number" name="price_per_unit" step="0.01" required></label><br>
+        <label>Minimum Order Quantity <input type="number" name="minimum_order_quantity" step="0.01" value="1"></label><br>
+    </fieldset>
+
+    <fieldset>
+        <legend>Dates & Quality</legend>
+        <label>Harvest Date <input type="date" name="harvest_date" required></label><br>
+        <label>Expiry Date <input type="date" name="expiry_date"></label><br>
+        <label><input type="checkbox" name="is_organic"> Organic</label><br>
+        <label><input type="checkbox" name="is_certified"> Certified</label><br>
+    </fieldset>
+
+    <button type="submit">List Product</button>
+    <a href="{% url 'product_list' %}">Cancel</a>
+</form>
+{% endblock %}
