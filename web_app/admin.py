@@ -287,9 +287,10 @@ class DisputeInline(admin.StackedInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_number', 'buyer', 'farmer', 'status_badge', 'subtotal',
-                    'shipping_cost', 'total_amount', 'farmer_earnings_display',
+    list_display = ['order_number', 'buyer', 'farmer', 'status_badge', 'status',  # ← add 'status'
+                    'subtotal', 'shipping_cost', 'total_amount', 'farmer_earnings_display',
                     'payment_method', 'created_at']
+
     list_filter = ['status', 'payment_method', 'created_at']
     search_fields = ['order_number', 'buyer__username', 'farmer__username', 'payment_reference']
     list_editable = ['status']
