@@ -1,59 +1,607 @@
 {% extends 'base.html' %}
 {% block title %}My Profile{% endblock %}
 
+{% block extra_head %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   PROFILE — inherits base.html tokens
+═══════════════════════════════════════════════════════════ */
+
+/* ── Breadcrumb ──────────────────────────────────────────── */
+.breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12.5px; color: var(--text-muted); margin-bottom: 22px;
+}
+.breadcrumb a { color: var(--green-500); transition: color .2s; }
+.breadcrumb a:hover { color: var(--green-700); }
+.breadcrumb i { font-size: 11px; }
+
+/* ══ LAYOUT ══════════════════════════════════════════════ */
+.profile-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ══ LEFT SIDEBAR CARD ═══════════════════════════════════ */
+.profile-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: calc(var(--nav-h) + 20px);
+}
+
+/* Identity card */
+.identity-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+}
+.identity-banner {
+    height: 80px;
+    background: linear-gradient(135deg, var(--green-700) 0%, var(--green-500) 55%, var(--green-300) 100%);
+    position: relative;
+}
+.identity-banner::after {
+    content: '🌿';
+    position: absolute; right: 16px; top: 10px;
+    font-size: 44px; opacity: .18;
+    transform: rotate(-15deg);
+}
+.avatar-wrap {
+    display: flex; justify-content: center;
+    margin-top: -36px; position: relative; z-index: 1;
+}
+.avatar-circle {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    border: 3px solid var(--white);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--green-500), var(--green-300));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-initials {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700; color: #fff;
+    line-height: 1;
+}
+.identity-body { padding: 10px 20px 18px; text-align: center; }
+.identity-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700; color: var(--text-primary);
+    margin-top: 2px;
+}
+.identity-username {
+    font-size: 12.5px; color: var(--text-muted); margin-top: 2px;
+}
+.role-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--green-50); border: 1.5px solid var(--green-100);
+    color: var(--green-700); font-size: 11.5px; font-weight: 700;
+    padding: 4px 12px; border-radius: 40px; margin: 8px 0;
+}
+.role-pill i { font-size: 12px; color: var(--green-400); }
+
+/* Verified badge */
+.verified-row {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 12.5px; font-weight: 600;
+    padding: 8px 20px;
+    border-top: 1px solid var(--border-light);
+}
+.verified-row.yes { color: var(--green-700); background: var(--green-50); }
+.verified-row.no  { color: var(--text-muted); }
+
+/* Stats strip */
+.stats-strip {
+    display: grid; grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--border-light);
+}
+.stat-cell {
+    padding: 12px 14px; text-align: center;
+    border-right: 1px solid var(--border-light);
+}
+.stat-cell:nth-child(even) { border-right: none; }
+.stat-cell:nth-child(n+3) { border-top: 1px solid var(--border-light); }
+.stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 700; color: var(--green-700); line-height: 1;
+}
+.stat-lbl { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text-placeholder); margin-top: 3px; }
+
+/* Contact card */
+.contact-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden; box-shadow: var(--shadow-xs);
+}
+.contact-head {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+    font-family: 'Playfair Display', serif;
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+    display: flex; align-items: center; gap: 7px;
+}
+.contact-head i { color: var(--green-500); font-size: 14px; }
+.contact-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13.5px;
+}
+.contact-row:last-child { border-bottom: none; }
+.contact-icon {
+    width: 30px; height: 30px;
+    background: var(--surface); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: var(--green-500); flex-shrink: 0;
+}
+.contact-label { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text-placeholder); line-height: 1; margin-bottom: 2px; }
+.contact-val { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
+.member-since { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; padding: 10px 18px; border-top: 1px solid var(--border-light); }
+.member-since i { color: var(--green-300); }
+
+/* ══ RIGHT COLUMN ════════════════════════════════════════ */
+.profile-main { display: flex; flex-direction: column; gap: 22px; }
+
+/* ── Section card ──────────────────────────────────────── */
+.section-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden; box-shadow: var(--shadow-xs);
+}
+.section-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 22px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+}
+.section-icon {
+    width: 32px; height: 32px;
+    background: var(--green-50); border: 1.5px solid var(--green-100);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: var(--green-500); flex-shrink: 0;
+}
+.section-title { font-family: 'Playfair Display', serif; font-size: 15.5px; font-weight: 600; color: var(--text-primary); }
+.section-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+/* ── Edit form ─────────────────────────────────────────── */
+.edit-form { padding: 22px; }
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .6px;
+    text-transform: uppercase; color: var(--text-muted);
+}
+.form-input {
+    height: 40px;
+    background: var(--surface); border: 1.5px solid transparent;
+    border-radius: 9px; padding: 0 13px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-primary);
+    outline: none;
+    transition: border-color .2s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease);
+}
+.form-input:focus {
+    border-color: var(--green-300);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(120,192,72,.15);
+}
+.form-input::placeholder { color: var(--text-placeholder); }
+
+/* File upload */
+.file-upload-wrap {
+    position: relative;
+    display: flex; align-items: center; gap: 12px;
+}
+.file-upload-label {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 16px;
+    background: var(--surface); border: 1.5px dashed var(--border);
+    border-radius: 9px; font-size: 13px; font-weight: 500;
+    color: var(--text-second); cursor: pointer;
+    transition: border-color .2s, background .2s, color .2s;
+}
+.file-upload-label:hover { border-color: var(--green-300); color: var(--green-700); background: var(--green-50); }
+.file-upload-label i { font-size: 16px; color: var(--green-400); }
+.file-upload-label input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.file-hint { font-size: 12px; color: var(--text-muted); }
+
+/* Save button */
+.btn-save {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 26px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff; border: none; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 12px rgba(62,124,35,.28);
+    transition: opacity .2s, box-shadow .2s, transform .15s;
+}
+.btn-save:hover { opacity: .92; box-shadow: 0 4px 18px rgba(62,124,35,.35); transform: translateY(-1px); }
+
+/* ── Farmer profile metrics ────────────────────────────── */
+.farmer-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0;
+    border-bottom: 1px solid var(--border-light);
+}
+.farmer-metric {
+    padding: 16px 18px;
+    border-right: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+}
+.farmer-metric:last-child { border-right: none; }
+.fm-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 700; color: var(--green-700); line-height: 1;
+}
+.fm-val small { font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--text-muted); margin-left: 2px; font-weight: 400; }
+.fm-lbl { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text-placeholder); margin-top: 4px; }
+
+.farmer-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    padding: 16px 20px;
+    gap: 14px;
+}
+.fd-item { display: flex; flex-direction: column; gap: 3px; }
+.fd-key { font-size: 10.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--text-placeholder); }
+.fd-val { font-size: 14px; font-weight: 500; color: var(--text-primary); display: flex; align-items: center; gap: 5px; }
+.fd-val i { font-size: 13px; color: var(--green-400); }
+
+/* Premium badge */
+.premium-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+    background: linear-gradient(135deg, #fdf0d5, #fce8b0);
+    color: var(--amber-600);
+    border: 1.5px solid #f5d08a;
+}
+
+/* ── Farms list ────────────────────────────────────────── */
+.farms-list { padding: 14px 20px; display: flex; flex-direction: column; gap: 10px; }
+.farm-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 14px;
+    background: var(--off-white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius);
+    transition: border-color .2s, box-shadow .2s;
+}
+.farm-row:hover { border-color: var(--green-100); box-shadow: var(--shadow-xs); }
+.farm-row-icon {
+    width: 40px; height: 40px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--green-500); flex-shrink: 0;
+    overflow: hidden;
+}
+.farm-row-icon img { width: 100%; height: 100%; object-fit: cover; }
+.farm-row-info { flex: 1; min-width: 0; }
+.farm-row-name { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+.farm-row-name a { color: inherit; transition: color .18s; }
+.farm-row-name a:hover { color: var(--green-500); }
+.farm-row-meta { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+.farm-row-meta i { color: var(--green-300); font-size: 11px; }
+.farm-row-badge { flex-shrink: 0; }
+
+.badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 11.5px; font-weight: 600; white-space: nowrap;
+}
+.badge-green { background: #eaf7ea; color: #1d6b1d; }
+.badge-gray  { background: var(--surface); color: var(--text-muted); }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 960px) {
+    .profile-layout { grid-template-columns: 1fr; }
+    .profile-sidebar { position: static; }
+    .identity-card { max-width: 420px; }
+}
+@media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .farmer-metrics { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 400px) {
+    .stats-strip { grid-template-columns: 1fr; }
+    .stat-cell { border-right: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <i class="bi bi-house-door-fill"></i>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>My Profile</span>
+</nav>
+{% endblock %}
+
 {% block content %}
-<h1>👤 My Profile</h1>
 
-<section>
-    <h2>Current Details</h2>
-    <p>Name: {{ user.get_full_name }}</p>
-    <p>Username: {{ user.username }}</p>
-    <p>Email: {{ user.email }}</p>
-    <p>Phone: {{ user.phone }}</p>
-    <p>Role: {{ user.get_role_display }}</p>
-    <p>Location: {{ user.location }}</p>
-    <p>Verified: {{ user.is_verified|yesno:"Yes,No" }}</p>
-    <p>Rating: {{ user.rating }}/5.00</p>
-    <p>Total Transactions: {{ user.total_transactions }}</p>
-    <p>Member Since: {{ user.created_at|date:"d M Y" }}</p>
-</section>
+<div class="profile-layout">
 
-<section>
-    <h2>Edit Profile</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <label>First Name <input type="text" name="first_name" value="{{ user.first_name }}"></label><br>
-        <label>Last Name <input type="text" name="last_name" value="{{ user.last_name }}"></label><br>
-        <label>Email <input type="email" name="email" value="{{ user.email }}"></label><br>
-        <label>Phone <input type="tel" name="phone" value="{{ user.phone }}"></label><br>
-        <label>Location <input type="text" name="location" value="{{ user.location }}"></label><br>
-        <label>Profile Photo <input type="file" name="profile_photo" accept="image/*"></label><br>
-        <button type="submit">Save Changes</button>
-    </form>
-</section>
+    <!-- ══════════════════════════════════════════════════════
+         LEFT SIDEBAR
+    ══════════════════════════════════════════════════════ -->
+    <div class="profile-sidebar">
 
-{% if farmer_profile %}
-<section>
-    <h2>🌾 Farmer Profile</h2>
-    <p>Cooperative: {{ farmer_profile.cooperative_name }}</p>
-    <p>Experience: {{ farmer_profile.years_experience }} years</p>
-    <p>Preferred Payment: {{ farmer_profile.get_preferred_payment_display }}</p>
-    <p>M-Pesa: {{ farmer_profile.mpesa_number }}</p>
-    <p>Total Sales: KES {{ farmer_profile.total_sales|floatformat:0 }}</p>
-    <p>Savings vs Middlemen: KES {{ farmer_profile.savings_vs_middleman|floatformat:0 }}</p>
-    <p>Premium: {{ farmer_profile.is_premium|yesno:"Yes,No" }}</p>
-</section>
-{% endif %}
+        <!-- Identity card -->
+        <div class="identity-card">
+            <div class="identity-banner"></div>
+            <div class="avatar-wrap">
+                <div class="avatar-circle">
+                    {% if user.profile_photo %}
+                    <img src="{{ user.profile_photo.url }}" alt="{{ user.get_full_name }}">
+                    {% else %}
+                    <span class="avatar-initials">{{ user.get_full_name|default:user.username|first|upper }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="identity-body">
+                <div class="identity-name">{{ user.get_full_name|default:user.username }}</div>
+                <div class="identity-username">@{{ user.username }}</div>
+                <div class="role-pill">
+                    {% if user.role == 'farmer' %}<i class="bi bi-tree"></i> Farmer
+                    {% elif user.role == 'buyer' %}<i class="bi bi-bag-check"></i> Buyer
+                    {% elif user.role == 'driver' %}<i class="bi bi-truck"></i> Driver
+                    {% elif user.role == 'cold_storage' %}<i class="bi bi-thermometer-snow"></i> Cold Storage
+                    {% elif user.role == 'admin' %}<i class="bi bi-shield-check"></i> Admin
+                    {% else %}<i class="bi bi-person-badge"></i> {{ user.get_role_display }}{% endif %}
+                </div>
+            </div>
 
-{% if farms %}
-<section>
-    <h2>My Farms</h2>
-    <ul>
-        {% for farm in farms %}
-            <li><a href="{% url 'farm_detail' farm.pk %}">{{ farm.name }}</a> — {{ farm.location_name }}</li>
-        {% endfor %}
-    </ul>
-</section>
-{% endif %}
+            <!-- Verified strip -->
+            <div class="verified-row {% if user.is_verified %}yes{% else %}no{% endif %}">
+                {% if user.is_verified %}
+                <i class="bi bi-patch-check-fill"></i> Verified Account
+                {% else %}
+                <i class="bi bi-patch-exclamation"></i> Not Verified
+                {% endif %}
+            </div>
+
+            <!-- Stats strip -->
+            <div class="stats-strip">
+                <div class="stat-cell">
+                    <div class="stat-val">{{ user.rating|floatformat:1 }}</div>
+                    <div class="stat-lbl">Rating / 5</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-val">{{ user.total_transactions }}</div>
+                    <div class="stat-lbl">Transactions</div>
+                </div>
+            </div>
+
+            <!-- Member since -->
+            <div class="member-since">
+                <i class="bi bi-calendar3"></i>
+                Member since {{ user.created_at|date:"d M Y" }}
+            </div>
+        </div>
+
+        <!-- Contact card -->
+        <div class="contact-card">
+            <div class="contact-head"><i class="bi bi-person-lines-fill"></i> Contact Info</div>
+            <div class="contact-row">
+                <div class="contact-icon"><i class="bi bi-envelope-fill"></i></div>
+                <div>
+                    <div class="contact-label">Email</div>
+                    <div class="contact-val">{{ user.email|default:"—" }}</div>
+                </div>
+            </div>
+            <div class="contact-row">
+                <div class="contact-icon"><i class="bi bi-telephone-fill"></i></div>
+                <div>
+                    <div class="contact-label">Phone</div>
+                    <div class="contact-val">{{ user.phone|default:"—" }}</div>
+                </div>
+            </div>
+            <div class="contact-row">
+                <div class="contact-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                <div>
+                    <div class="contact-label">Location</div>
+                    <div class="contact-val">{{ user.location|default:"—" }}</div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /sidebar -->
+
+
+    <!-- ══════════════════════════════════════════════════════
+         RIGHT MAIN COLUMN
+    ══════════════════════════════════════════════════════ -->
+    <div class="profile-main">
+
+        <!-- ── Edit Profile ───────────────────────────── -->
+        <div class="section-card">
+            <div class="section-head">
+                <div class="section-icon"><i class="bi bi-pencil-square"></i></div>
+                <div>
+                    <div class="section-title">Edit Profile</div>
+                    <div class="section-subtitle">Update your personal details and photo</div>
+                </div>
+            </div>
+            <div class="edit-form">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="first_name">First Name</label>
+                            <input class="form-input" type="text" id="first_name" name="first_name"
+                                   value="{{ user.first_name }}" placeholder="First name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="last_name">Last Name</label>
+                            <input class="form-input" type="text" id="last_name" name="last_name"
+                                   value="{{ user.last_name }}" placeholder="Last name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email Address</label>
+                            <input class="form-input" type="email" id="email" name="email"
+                                   value="{{ user.email }}" placeholder="your@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="phone">Phone Number</label>
+                            <input class="form-input" type="tel" id="phone" name="phone"
+                                   value="{{ user.phone }}" placeholder="+254 700 000 000">
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label" for="location">Location</label>
+                            <input class="form-input" type="text" id="location" name="location"
+                                   value="{{ user.location }}" placeholder="e.g. Nakuru, Kenya">
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label">Profile Photo</label>
+                            <div class="file-upload-wrap">
+                                <label class="file-upload-label">
+                                    <i class="bi bi-cloud-upload"></i>
+                                    Choose Photo
+                                    <input type="file" name="profile_photo" accept="image/*"
+                                           onchange="this.closest('label').querySelector('span') && (this.closest('label').querySelector('span').textContent = this.files[0]?.name || '')">
+                                </label>
+                                <span class="file-hint">JPG, PNG or WebP · Max 5 MB</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-check-lg"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ── Farmer Profile ─────────────────────────── -->
+        {% if farmer_profile %}
+        <div class="section-card">
+            <div class="section-head">
+                <div class="section-icon"><i class="bi bi-tree"></i></div>
+                <div>
+                    <div class="section-title">Farmer Profile</div>
+                    <div class="section-subtitle">Your farming credentials and earnings</div>
+                </div>
+                {% if farmer_profile.is_premium %}
+                <span class="premium-badge" style="margin-left:auto;">
+                    <i class="bi bi-star-fill"></i> Premium
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Earnings metrics strip -->
+            <div class="farmer-metrics">
+                <div class="farmer-metric">
+                    <div class="fm-val">{{ farmer_profile.total_sales|floatformat:0 }}<small>KES</small></div>
+                    <div class="fm-lbl">Total Sales</div>
+                </div>
+                <div class="farmer-metric">
+                    <div class="fm-val">{{ farmer_profile.savings_vs_middleman|floatformat:0 }}<small>KES</small></div>
+                    <div class="fm-lbl">Savings vs Middlemen</div>
+                </div>
+                <div class="farmer-metric">
+                    <div class="fm-val">{{ farmer_profile.years_experience }}</div>
+                    <div class="fm-lbl">Years Experience</div>
+                </div>
+            </div>
+
+            <!-- Other details -->
+            <div class="farmer-details">
+                <div class="fd-item">
+                    <div class="fd-key">Cooperative</div>
+                    <div class="fd-val"><i class="bi bi-people-fill"></i>{{ farmer_profile.cooperative_name|default:"—" }}</div>
+                </div>
+                <div class="fd-item">
+                    <div class="fd-key">Preferred Payment</div>
+                    <div class="fd-val"><i class="bi bi-credit-card"></i>{{ farmer_profile.get_preferred_payment_display }}</div>
+                </div>
+                <div class="fd-item">
+                    <div class="fd-key">M-Pesa Number</div>
+                    <div class="fd-val"><i class="bi bi-phone"></i>{{ farmer_profile.mpesa_number|default:"—" }}</div>
+                </div>
+                <div class="fd-item">
+                    <div class="fd-key">Account Tier</div>
+                    <div class="fd-val">
+                        {% if farmer_profile.is_premium %}
+                        <span class="premium-badge"><i class="bi bi-star-fill"></i> Premium</span>
+                        {% else %}
+                        <span class="badge badge-gray"><i class="bi bi-person"></i> Standard</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ── My Farms ────────────────────────────────── -->
+        {% if farms %}
+        <div class="section-card">
+            <div class="section-head">
+                <div class="section-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                <div>
+                    <div class="section-title">My Farms</div>
+                    <div class="section-subtitle">{{ farms|length }} registered farm{{ farms|length|pluralize }}</div>
+                </div>
+                <a href="{% url 'farm_create' %}" style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--green-500);padding:6px 12px;border:1.5px solid var(--green-100);border-radius:8px;background:var(--green-50);transition:all .18s;white-space:nowrap;" onmouseover="this.style.background='var(--green-500)';this.style.color='#fff';this.style.borderColor='var(--green-500)';" onmouseout="this.style.background='var(--green-50)';this.style.color='var(--green-500)';this.style.borderColor='var(--green-100)';">
+                    <i class="bi bi-plus-lg"></i> Add Farm
+                </a>
+            </div>
+            <div class="farms-list">
+                {% for farm in farms %}
+                <div class="farm-row">
+                    <div class="farm-row-icon">
+                        {% if farm.photo %}
+                        <img src="{{ farm.photo.url }}" alt="{{ farm.name }}">
+                        {% else %}
+                        <i class="bi bi-tree"></i>
+                        {% endif %}
+                    </div>
+                    <div class="farm-row-info">
+                        <div class="farm-row-name">
+                            <a href="{% url 'farm_detail' farm.pk %}">{{ farm.name }}</a>
+                        </div>
+                        <div class="farm-row-meta">
+                            <i class="bi bi-geo-alt-fill"></i> {{ farm.location_name }}
+                            &nbsp;·&nbsp;
+                            <i class="bi bi-tree"></i> {{ farm.get_farm_type_display }}
+                            &nbsp;·&nbsp;
+                            <i class="bi bi-bounding-box"></i> {{ farm.size_acres }} ac
+                        </div>
+                    </div>
+                    <div class="farm-row-badge">
+                        {% if farm.is_active %}
+                        <span class="badge badge-green"><i class="bi bi-circle-fill" style="font-size:7px;"></i> Active</span>
+                        {% else %}
+                        <span class="badge badge-gray">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div><!-- /profile-main -->
+</div><!-- /profile-layout -->
 
 {% endblock %}

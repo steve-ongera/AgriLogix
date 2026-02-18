@@ -1,124 +1,891 @@
 {% extends 'base.html' %}
 {% block title %}{{ farm.name }}{% endblock %}
 
+{% block extra_head %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   FARM DETAIL — inherits base.html tokens
+═══════════════════════════════════════════════════════════ */
+
+/* ── Breadcrumb ──────────────────────────────────────────── */
+.breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12.5px; color: var(--text-muted); margin-bottom: 22px;
+}
+.breadcrumb a { color: var(--green-500); transition: color .2s; }
+.breadcrumb a:hover { color: var(--green-700); }
+.breadcrumb i { font-size: 11px; }
+
+/* ══ HERO ════════════════════════════════════════════════════ */
+.fd-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 28px;
+    align-items: start;
+}
+
+/* ── Image panel ─────────────────────────────────────────── */
+.fd-img-wrap {
+    position: relative;
+    width: 100%; padding-top: 66%;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1.5px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+}
+.fd-img-wrap img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform .4s var(--ease);
+}
+.fd-img-wrap:hover img { transform: scale(1.04); }
+
+/* No-image placeholder */
+.fd-no-img {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--green-50) 100%);
+    color: var(--text-placeholder);
+}
+.fd-no-img i { font-size: 56px; color: var(--green-100); }
+.fd-no-img span { font-size: 13px; font-weight: 600; letter-spacing: .4px; }
+
+/* Farm type badge overlay */
+.fd-type-badge {
+    position: absolute; top: 14px; left: 14px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+    background: rgba(234,245,223,.92); color: var(--green-700);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.4);
+    display: flex; align-items: center; gap: 5px;
+}
+
+/* Active status badge */
+.fd-status-badge {
+    position: absolute; top: 14px; right: 14px;
+    padding: 4px 11px; border-radius: 20px;
+    font-size: 10.5px; font-weight: 700;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.4);
+    display: flex; align-items: center; gap: 4px;
+}
+.fd-status-badge.active   { background: rgba(234,245,223,.92); color: var(--green-700); }
+.fd-status-badge.inactive { background: rgba(240,240,240,.92); color: #888; }
+
+/* Feature pills bottom of image */
+.fd-feature-pills {
+    position: absolute; bottom: 12px; left: 12px;
+    display: flex; gap: 5px; flex-wrap: wrap;
+}
+.fd-pill {
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 10.5px; font-weight: 700;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.4);
+    display: flex; align-items: center; gap: 4px;
+}
+.fd-pill.storage   { background: rgba(200,230,176,.9); color: var(--green-700); }
+.fd-pill.electric  { background: rgba(255,248,220,.9); color: #8a6000; }
+.fd-pill.certified { background: rgba(253,240,213,.9); color: var(--amber-600); }
+
+/* ── Summary card ────────────────────────────────────────── */
+.fd-summary-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+}
+.fd-farm-type-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .7px;
+    text-transform: uppercase; color: var(--green-400);
+    display: flex; align-items: center; gap: 5px;
+    padding: 16px 20px 0;
+}
+.fd-farm-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 700;
+    color: var(--text-primary); line-height: 1.2;
+    padding: 8px 20px 0;
+}
+.fd-owner-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 20px 14px;
+    border-bottom: 1px solid var(--border-light);
+    flex-wrap: wrap;
+}
+.fd-owner-row span {
+    font-size: 13px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 4px;
+}
+.fd-owner-row span i { color: var(--green-300); font-size: 13px; }
+.fd-owner-row .sep { color: var(--border); }
+
+/* Key metrics row */
+.fd-metrics-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: 1px solid var(--border-light);
+}
+.fd-metric {
+    padding: 14px 16px;
+    border-right: 1px solid var(--border-light);
+    text-align: center;
+}
+.fd-metric:last-child { border-right: none; }
+.fd-metric-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700; color: var(--green-700);
+    line-height: 1;
+}
+.fd-metric-val small {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 500; color: var(--text-muted); margin-left: 2px;
+}
+.fd-metric-lbl {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase; color: var(--text-placeholder);
+    margin-top: 4px;
+}
+
+/* Quick facts chips */
+.fd-quick-facts {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; gap: 8px; flex-wrap: wrap;
+}
+.qf-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface); border: 1.5px solid var(--border-light);
+    border-radius: 8px; font-size: 12px; font-weight: 500; color: var(--text-second);
+}
+.qf-chip i { font-size: 13px; color: var(--green-400); }
+.qf-chip.hi { background: var(--green-50); border-color: var(--green-100); color: var(--green-700); }
+.qf-chip.amber { background: var(--amber-100); border-color: #f5d08a; color: var(--amber-600); }
+.qf-chip.amber i { color: var(--amber-400); }
+
+/* GPS block */
+.fd-gps-block {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface);
+}
+.fd-gps-block i { font-size: 16px; color: var(--green-500); flex-shrink: 0; }
+.fd-gps-coords {
+    font-size: 12.5px; color: var(--text-muted);
+    font-family: monospace; letter-spacing: .3px;
+}
+
+/* CTA block */
+.fd-cta-block {
+    padding: 16px 20px;
+    display: flex; flex-direction: column; gap: 9px;
+}
+.btn-edit-row { display: flex; gap: 8px; }
+.btn-edit {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px; background: var(--white); border: 1.5px solid var(--border);
+    border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; color: var(--text-second);
+    transition: all .18s;
+}
+.btn-edit:hover { border-color: var(--green-300); color: var(--green-700); background: var(--green-50); }
+.btn-delete {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px; background: var(--white); border: 1.5px solid #f5b0b0;
+    border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; color: #b83232; transition: all .18s;
+}
+.btn-delete:hover { background: #fff4f4; border-color: #b83232; }
+.btn-harvest {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 10px; background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff; border: none; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; box-shadow: 0 2px 10px rgba(62,124,35,.25);
+    transition: opacity .2s, box-shadow .2s;
+}
+.btn-harvest:hover { opacity: .9; box-shadow: 0 4px 14px rgba(62,124,35,.35); color: #fff; }
+
+/* ══ DESCRIPTION ══════════════════════════════════════════ */
+.desc-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden; box-shadow: var(--shadow-xs);
+    margin-bottom: 22px;
+}
+.desc-head {
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+    font-family: 'Playfair Display', serif;
+    font-size: 15.5px; font-weight: 600; color: var(--text-primary);
+    display: flex; align-items: center; gap: 8px;
+}
+.desc-head i { color: var(--green-500); }
+.desc-body { padding: 16px 20px; font-size: 14px; color: var(--text-second); line-height: 1.8; }
+
+/* ══ SECTION CARD (shared) ════════════════════════════════ */
+.section-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden; box-shadow: var(--shadow-xs);
+    margin-bottom: 22px;
+}
+.section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+    gap: 10px; flex-wrap: wrap;
+}
+.section-head-left { display: flex; align-items: center; gap: 10px; }
+.section-icon {
+    width: 32px; height: 32px;
+    background: var(--green-50); border: 1.5px solid var(--green-100);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: var(--green-500); flex-shrink: 0;
+}
+.section-title { font-family: 'Playfair Display', serif; font-size: 15.5px; font-weight: 600; color: var(--text-primary); }
+.section-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.section-action {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12.5px; font-weight: 600; color: var(--green-500);
+    padding: 6px 12px; border: 1.5px solid var(--green-100);
+    border-radius: 8px; background: var(--green-50);
+    transition: background .2s, border-color .2s, color .2s; white-space: nowrap;
+}
+.section-action:hover { background: var(--green-500); border-color: var(--green-500); color: #fff; }
+
+/* ══ DETAILS GRID ═════════════════════════════════════════ */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+.detail-cell {
+    padding: 13px 20px;
+    border-right: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+}
+.detail-cell:nth-child(even) { background: var(--off-white); }
+.detail-key {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .6px;
+    text-transform: uppercase; color: var(--text-placeholder); margin-bottom: 4px;
+}
+.detail-val {
+    font-size: 14px; font-weight: 500; color: var(--text-primary);
+    display: flex; align-items: center; gap: 5px;
+}
+
+/* ══ PRODUCT MINI-CARDS ═══════════════════════════════════ */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    padding: 18px 20px;
+}
+.prod-mini-card {
+    background: var(--off-white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: box-shadow .2s, border-color .2s, transform .2s;
+    display: flex; flex-direction: column;
+}
+.prod-mini-card:hover { box-shadow: var(--shadow-sm); border-color: var(--green-100); transform: translateY(-2px); }
+
+.prod-mini-img {
+    position: relative; width: 100%; padding-top: 58%;
+    background: var(--surface); overflow: hidden; flex-shrink: 0;
+}
+.prod-mini-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .3s var(--ease); }
+.prod-mini-card:hover .prod-mini-img img { transform: scale(1.06); }
+.prod-mini-no-img {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: linear-gradient(135deg, var(--surface), var(--green-50));
+    color: var(--text-placeholder);
+}
+.prod-mini-no-img i { font-size: 28px; color: var(--green-100); }
+.prod-mini-no-img span { font-size: 10px; font-weight: 600; }
+
+.prod-mini-status {
+    position: absolute; top: 8px; left: 8px;
+    padding: 2px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 700;
+    backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.4);
+}
+.prod-mini-status.available { background: rgba(234,245,223,.92); color: var(--green-700); }
+.prod-mini-status.reserved  { background: rgba(253,240,213,.92); color: var(--amber-600); }
+.prod-mini-status.sold      { background: rgba(240,240,240,.92); color: #666; }
+.prod-mini-status.expired   { background: rgba(254,240,240,.92); color: #b83232; }
+
+.prod-mini-body { padding: 11px 13px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.prod-mini-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px; font-weight: 600; color: var(--text-primary); line-height: 1.3;
+}
+.prod-mini-name a { color: inherit; transition: color .18s; }
+.prod-mini-name a:hover { color: var(--green-500); }
+.prod-mini-meta { font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+.prod-mini-meta i { color: var(--green-300); font-size: 11px; }
+.prod-mini-footer {
+    margin-top: auto; padding-top: 9px;
+    border-top: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+}
+.prod-mini-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; font-weight: 700; color: var(--green-700);
+}
+.prod-mini-price small { font-family: 'DM Sans', sans-serif; font-size: 10px; color: var(--text-muted); font-weight: 400; }
+.prod-mini-cta { display: flex; gap: 5px; }
+.btn-mini-view {
+    width: 28px; height: 28px; background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--text-second); transition: all .18s;
+}
+.btn-mini-view:hover { border-color: var(--green-300); color: var(--green-700); background: var(--green-50); }
+.btn-mini-order {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff; border: none; border-radius: 6px;
+    font-family: 'DM Sans', sans-serif; font-size: 11.5px; font-weight: 600;
+    transition: opacity .18s; white-space: nowrap;
+}
+.btn-mini-order:hover { opacity: .9; color: #fff; }
+
+/* ══ DATA TABLE ═══════════════════════════════════════════ */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.data-table thead th {
+    padding: 10px 16px; text-align: left;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .6px;
+    text-transform: uppercase; color: var(--text-muted);
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+.data-table thead th:first-child { padding-left: 22px; }
+.data-table tbody tr { border-bottom: 1px solid var(--border-light); transition: background .18s; }
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--surface); }
+.data-table td { padding: 11px 16px; color: var(--text-second); vertical-align: middle; }
+.data-table td:first-child { padding-left: 22px; font-weight: 500; color: var(--text-primary); }
+.data-table a { color: var(--green-500); font-weight: 600; transition: color .18s; }
+.data-table a:hover { color: var(--green-700); }
+
+/* ── Harvest status inline form ──────────────────────────── */
+.harvest-form { display: flex; align-items: center; gap: 7px; }
+.harvest-select {
+    height: 30px; padding: 0 8px;
+    background: var(--surface); border: 1.5px solid transparent;
+    border-radius: 6px; font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px; color: var(--text-primary); outline: none;
+    transition: border-color .18s;
+}
+.harvest-select:focus { border-color: var(--green-300); background: var(--white); }
+.btn-update {
+    height: 30px; padding: 0 11px;
+    background: var(--green-50); border: 1.5px solid var(--green-100);
+    border-radius: 6px; font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 600; color: var(--green-700);
+    cursor: pointer; transition: all .18s;
+}
+.btn-update:hover { background: var(--green-500); border-color: var(--green-500); color: #fff; }
+
+/* ── Badge ───────────────────────────────────────────────── */
+.badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 11.5px; font-weight: 600; white-space: nowrap;
+}
+.badge-green  { background: #eaf7ea; color: #1d6b1d; }
+.badge-amber  { background: var(--amber-100); color: var(--amber-600); }
+.badge-blue   { background: #e8f3ff; color: #1a5aaa; }
+.badge-red    { background: #fef0f0; color: #b83232; }
+.badge-gray   { background: var(--surface); color: var(--text-muted); }
+
+/* ── Empty state ─────────────────────────────────────────── */
+.empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px; padding: 40px 20px; text-align: center;
+}
+.empty-icon { width: 54px; height: 54px; background: var(--surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text-muted); }
+.empty-state p { font-size: 13.5px; color: var(--text-muted); max-width: 280px; line-height: 1.6; }
+.empty-state a { display: inline-flex; align-items: center; gap: 5px; padding: 7px 16px; background: var(--green-500); color: #fff; border-radius: 8px; font-size: 13px; font-weight: 600; transition: background .2s; }
+.empty-state a:hover { background: var(--green-700); color: #fff; }
+
+/* ── Loss report — red accent section icon ───────────────── */
+.icon-red { background: #fff0f0 !important; border-color: #f5b0b0 !important; color: #b83232 !important; }
+
+/* ── Tbl overflow ────────────────────────────────────────── */
+.tbl-wrap { overflow-x: auto; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .fd-hero { grid-template-columns: 1fr; }
+    .fd-img-wrap { padding-top: 56%; }
+}
+@media (max-width: 640px) {
+    .fd-farm-name { font-size: 22px; }
+    .fd-metrics-row { grid-template-columns: repeat(3, 1fr); }
+    .details-grid { grid-template-columns: 1fr 1fr; }
+    .products-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 14px; }
+}
+@media (max-width: 420px) {
+    .details-grid { grid-template-columns: 1fr; }
+    .products-grid { grid-template-columns: 1fr; }
+    .fd-metrics-row { grid-template-columns: 1fr; }
+    .fd-metric { border-right: none; }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <i class="bi bi-house-door-fill"></i>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="{% url 'farm_list' %}">Farms</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>{{ farm.name }}</span>
+</nav>
+{% endblock %}
+
 {% block content %}
-<h1>🌾 {{ farm.name }}</h1>
-<p>Owner: {{ farm.owner.get_full_name }} | Type: {{ farm.get_farm_type_display }}</p>
 
-<section>
-    <h2>Farm Details</h2>
-    <table border="1">
-        <tr><th>Location</th><td>{{ farm.location_name }}</td></tr>
-        <tr><th>Nearest Town</th><td>{{ farm.nearest_town }}</td></tr>
-        <tr><th>Size</th><td>{{ farm.size_acres }} acres</td></tr>
-        <tr><th>Distance to Road</th><td>{{ farm.distance_to_road_km }} km</td></tr>
-        <tr><th>Water Source</th><td>{{ farm.water_source|default:"—" }}</td></tr>
-        <tr><th>Has Storage</th><td>{{ farm.has_storage|yesno:"Yes,No" }}</td></tr>
-        <tr><th>Has Electricity</th><td>{{ farm.has_electricity|yesno:"Yes,No" }}</td></tr>
-        <tr><th>Certification</th><td>{{ farm.certification|default:"None" }}</td></tr>
-        <tr><th>GPS</th><td>{{ farm.latitude }}, {{ farm.longitude }}</td></tr>
-    </table>
-    <p>{{ farm.description }}</p>
-</section>
+<!-- ══ HERO: image + summary ════════════════════════════════ -->
+<div class="fd-hero">
 
-{% if user == farm.owner %}
-<p>
-    <a href="{% url 'farm_edit' farm.pk %}">✏️ Edit Farm</a> |
-    <a href="{% url 'farm_delete' farm.pk %}">🗑️ Deactivate</a> |
-    <a href="{% url 'harvest_create' farm.pk %}">+ Add Harvest Schedule</a>
-</p>
+    <!-- Left — farm photo -->
+    <div class="fd-img-wrap">
+        {% if farm.photo %}
+        <img src="{{ farm.photo.url }}" alt="{{ farm.name }}">
+        {% else %}
+        <div class="fd-no-img">
+            <i class="bi bi-image"></i>
+            <span>No Farm Photo</span>
+        </div>
+        {% endif %}
+
+        <!-- Type badge -->
+        <span class="fd-type-badge">
+            <i class="bi bi-tree"></i> {{ farm.get_farm_type_display }}
+        </span>
+
+        <!-- Active status -->
+        <span class="fd-status-badge {% if farm.is_active %}active{% else %}inactive{% endif %}">
+            <i class="bi bi-circle-fill" style="font-size:7px;"></i>
+            {% if farm.is_active %}Active{% else %}Inactive{% endif %}
+        </span>
+
+        <!-- Feature pills -->
+        {% if farm.has_storage or farm.has_electricity or farm.certification %}
+        <div class="fd-feature-pills">
+            {% if farm.has_storage %}<span class="fd-pill storage"><i class="bi bi-thermometer-snow"></i> Cold Storage</span>{% endif %}
+            {% if farm.has_electricity %}<span class="fd-pill electric"><i class="bi bi-lightning-charge"></i> Electricity</span>{% endif %}
+            {% if farm.certification %}<span class="fd-pill certified"><i class="bi bi-patch-check"></i> Certified</span>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right — summary card -->
+    <div class="fd-summary-card">
+        <div class="fd-farm-type-label">
+            <i class="bi bi-tree"></i> {{ farm.get_farm_type_display }}
+        </div>
+        <h1 class="fd-farm-name">{{ farm.name }}</h1>
+
+        <div class="fd-owner-row">
+            <span><i class="bi bi-person-fill"></i> {{ farm.owner.get_full_name|default:farm.owner.username }}</span>
+            <span class="sep">·</span>
+            <span><i class="bi bi-geo-alt-fill"></i> {{ farm.location_name }}</span>
+            {% if farm.nearest_town %}
+            <span class="sep">·</span>
+            <span><i class="bi bi-building"></i> nr. {{ farm.nearest_town }}</span>
+            {% endif %}
+        </div>
+
+        <!-- Key metrics -->
+        <div class="fd-metrics-row">
+            <div class="fd-metric">
+                <div class="fd-metric-val">{{ farm.size_acres }}<small>ac</small></div>
+                <div class="fd-metric-lbl">Farm Size</div>
+            </div>
+            <div class="fd-metric">
+                <div class="fd-metric-val">{{ products.count }}</div>
+                <div class="fd-metric-lbl">Products</div>
+            </div>
+            <div class="fd-metric">
+                <div class="fd-metric-val">{{ harvests.count }}</div>
+                <div class="fd-metric-lbl">Harvests</div>
+            </div>
+        </div>
+
+        <!-- Quick facts -->
+        <div class="fd-quick-facts">
+            <span class="qf-chip hi">
+                <i class="bi bi-signpost-2"></i> {{ farm.distance_to_road_km }} km to road
+            </span>
+            {% if farm.water_source %}
+            <span class="qf-chip">
+                <i class="bi bi-droplet-half"></i> {{ farm.water_source }}
+            </span>
+            {% endif %}
+            {% if farm.has_storage %}
+            <span class="qf-chip hi">
+                <i class="bi bi-thermometer-snow"></i> Cold Storage
+            </span>
+            {% endif %}
+            {% if farm.has_electricity %}
+            <span class="qf-chip amber">
+                <i class="bi bi-lightning-charge"></i> Electricity
+            </span>
+            {% endif %}
+            {% if farm.certification %}
+            <span class="qf-chip amber">
+                <i class="bi bi-patch-check"></i> {{ farm.certification }}
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- GPS -->
+        <div class="fd-gps-block">
+            <i class="bi bi-pin-map-fill"></i>
+            <span class="fd-gps-coords">{{ farm.latitude }}, {{ farm.longitude }}</span>
+            <a href="https://maps.google.com/?q={{ farm.latitude }},{{ farm.longitude }}" target="_blank" rel="noopener"
+               style="margin-left:auto;font-size:12px;font-weight:600;color:var(--green-500);display:flex;align-items:center;gap:4px;transition:color .18s;"
+               onmouseover="this.style.color='var(--green-700)'" onmouseout="this.style.color='var(--green-500)'">
+               <i class="bi bi-box-arrow-up-right"></i> Open Map
+            </a>
+        </div>
+
+        <!-- Owner CTAs -->
+        {% if user == farm.owner %}
+        <div class="fd-cta-block">
+            <a href="{% url 'harvest_create' farm.pk %}" class="btn-harvest">
+                <i class="bi bi-calendar-plus"></i> Add Harvest Schedule
+            </a>
+            <div class="btn-edit-row">
+                <a href="{% url 'farm_edit' farm.pk %}" class="btn-edit">
+                    <i class="bi bi-pencil"></i> Edit Farm
+                </a>
+                <a href="{% url 'farm_delete' farm.pk %}" class="btn-delete"
+                   onclick="return confirm('Deactivate this farm?')">
+                    <i class="bi bi-trash3"></i> Deactivate
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+<!-- ══ DESCRIPTION ════════════════════════════════════════ -->
+{% if farm.description %}
+<div class="desc-card">
+    <div class="desc-head"><i class="bi bi-file-text"></i> About this Farm</div>
+    <div class="desc-body">{{ farm.description }}</div>
+</div>
 {% endif %}
 
-<section>
-    <h2>🥦 Available Products ({{ products.count }})</h2>
-    <table border="1">
-        <thead>
-            <tr><th>Product</th><th>Qty</th><th>Unit</th><th>Price</th><th>Harvest Date</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-            {% for p in products %}
-            <tr>
-                <td><a href="{% url 'product_detail' p.pk %}">{{ p.name }}</a></td>
-                <td>{{ p.quantity_available }}</td>
-                <td>{{ p.unit }}</td>
-                <td>KES {{ p.price_per_unit }}</td>
-                <td>{{ p.harvest_date }}</td>
-                <td>
-                    <a href="{% url 'product_detail' p.pk %}">View</a>
-                    {% if user.role == 'buyer' %}
-                        | <a href="{% url 'order_create' p.pk %}">Order</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="6">No products listed.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% if user == farm.owner %}
-        <a href="{% url 'product_create' %}">+ List New Product</a>
-    {% endif %}
-</section>
 
-<section>
-    <h2>📅 Harvest Schedules</h2>
-    <table border="1">
-        <thead>
-            <tr><th>Product</th><th>Expected (kg)</th><th>Actual (kg)</th><th>Harvest Date</th><th>Pickup Date</th><th>Status</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-            {% for h in harvests %}
-            <tr>
-                <td>{{ h.product_name }}</td>
-                <td>{{ h.expected_quantity_kg }}</td>
-                <td>{{ h.actual_quantity_kg|default:"—" }}</td>
-                <td>{{ h.harvest_date }}</td>
-                <td>{{ h.ready_for_pickup_date }}</td>
-                <td>{{ h.get_status_display }}</td>
-                <td>
-                    {% if user == farm.owner %}
-                    <form method="post" action="{% url 'harvest_update_status' h.pk %}">
-                        {% csrf_token %}
-                        <select name="status">
-                            <option value="planned">Planned</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="ready">Ready</option>
-                            <option value="collected">Collected</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                        <button type="submit">Update</button>
-                    </form>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="7">No schedules.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</section>
+<!-- ══ FULL DETAILS GRID ══════════════════════════════════ -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-info-circle"></i></div>
+            <div>
+                <div class="section-title">Farm Details</div>
+                <div class="section-subtitle">Full farm profile and infrastructure</div>
+            </div>
+        </div>
+    </div>
+    <div class="details-grid">
+        <div class="detail-cell">
+            <div class="detail-key">Location</div>
+            <div class="detail-val"><i class="bi bi-geo-alt" style="color:var(--green-400);"></i>{{ farm.location_name }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Nearest Town</div>
+            <div class="detail-val"><i class="bi bi-building" style="color:var(--green-400);"></i>{{ farm.nearest_town }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Size</div>
+            <div class="detail-val"><i class="bi bi-bounding-box" style="color:var(--green-400);"></i>{{ farm.size_acres }} acres</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Distance to Road</div>
+            <div class="detail-val"><i class="bi bi-signpost-2" style="color:var(--green-400);"></i>{{ farm.distance_to_road_km }} km</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Water Source</div>
+            <div class="detail-val"><i class="bi bi-droplet-half" style="color:var(--green-400);"></i>{{ farm.water_source|default:"—" }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">GPS Coordinates</div>
+            <div class="detail-val" style="font-size:12.5px;font-family:monospace;">{{ farm.latitude }}, {{ farm.longitude }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Cold Storage</div>
+            <div class="detail-val">
+                {% if farm.has_storage %}
+                <span class="badge badge-green"><i class="bi bi-thermometer-snow"></i> Available</span>
+                {% else %}
+                <span class="badge badge-gray"><i class="bi bi-dash"></i> None</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Electricity</div>
+            <div class="detail-val">
+                {% if farm.has_electricity %}
+                <span class="badge badge-amber"><i class="bi bi-lightning-charge"></i> Connected</span>
+                {% else %}
+                <span class="badge badge-gray"><i class="bi bi-dash"></i> No</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Certification</div>
+            <div class="detail-val">
+                {% if farm.certification %}
+                <span class="badge badge-amber"><i class="bi bi-patch-check"></i> {{ farm.certification }}</span>
+                {% else %}
+                <span class="badge badge-gray"><i class="bi bi-dash"></i> None</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Status</div>
+            <div class="detail-val">
+                {% if farm.is_active %}
+                <span class="badge badge-green"><i class="bi bi-circle-fill" style="font-size:7px;"></i> Active</span>
+                {% else %}
+                <span class="badge badge-gray"><i class="bi bi-circle" style="font-size:8px;"></i> Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
-<section>
-    <h2>📉 Loss Reports</h2>
-    {% if loss_reports %}
-    <table border="1">
-        <thead>
-            <tr><th>Product</th><th>Qty Lost (kg)</th><th>Value Lost</th><th>Cause</th><th>Date</th></tr>
-        </thead>
-        <tbody>
-            {% for r in loss_reports %}
-            <tr>
-                <td>{{ r.product_name }}</td>
-                <td>{{ r.quantity_lost_kg }}</td>
-                <td>KES {{ r.estimated_value_lost|floatformat:0 }}</td>
-                <td>{{ r.get_primary_cause_display }}</td>
-                <td>{{ r.incident_date }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+<!-- ══ AVAILABLE PRODUCTS ══════════════════════════════════ -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-box-seam"></i></div>
+            <div>
+                <div class="section-title">Available Products</div>
+                <div class="section-subtitle">{{ products.count }} listing{{ products.count|pluralize }} from this farm</div>
+            </div>
+        </div>
+        {% if user == farm.owner %}
+        <a href="{% url 'product_create' %}" class="section-action">
+            <i class="bi bi-plus-lg"></i> List Product
+        </a>
+        {% endif %}
+    </div>
+
+    {% if products %}
+    <div class="products-grid">
+        {% for p in products %}
+        <div class="prod-mini-card">
+            <!-- Mini product image -->
+            <div class="prod-mini-img">
+                {% if p.photo %}
+                <img src="{{ p.photo.url }}" alt="{{ p.name }}" loading="lazy">
+                {% else %}
+                <div class="prod-mini-no-img">
+                    <i class="bi bi-image"></i>
+                    <span>No Image</span>
+                </div>
+                {% endif %}
+                <span class="prod-mini-status {{ p.status }}">
+                    {% if p.status == 'available' %}Available
+                    {% elif p.status == 'reserved' %}Reserved
+                    {% elif p.status == 'sold' %}Sold Out
+                    {% else %}Expired{% endif %}
+                </span>
+            </div>
+            <!-- Body -->
+            <div class="prod-mini-body">
+                <div class="prod-mini-name">
+                    <a href="{% url 'product_detail' p.pk %}">{{ p.name }}</a>
+                </div>
+                <div class="prod-mini-meta">
+                    <i class="bi bi-box-seam"></i> {{ p.quantity_available }} {{ p.get_unit_display }}
+                </div>
+                <div class="prod-mini-meta">
+                    <i class="bi bi-calendar3"></i> {{ p.harvest_date|date:"d M Y" }}
+                </div>
+                <div class="prod-mini-footer">
+                    <div class="prod-mini-price">
+                        {{ p.price_per_unit|floatformat:0 }}<small> KES/{{ p.get_unit_display }}</small>
+                    </div>
+                    <div class="prod-mini-cta">
+                        <a href="{% url 'product_detail' p.pk %}" class="btn-mini-view" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if user.role == 'buyer' and p.status == 'available' %}
+                        <a href="{% url 'order_create' p.pk %}" class="btn-mini-order">
+                            <i class="bi bi-cart-plus"></i> Order
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% else %}
-        <p>No loss reports. Great work! ✅</p>
+    <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-box-seam"></i></div>
+        <p>No products listed from this farm yet.</p>
+        {% if user == farm.owner %}
+        <a href="{% url 'product_create' %}"><i class="bi bi-plus-lg"></i> List First Product</a>
+        {% endif %}
+    </div>
     {% endif %}
-</section>
+</div>
+
+
+<!-- ══ HARVEST SCHEDULES ════════════════════════════════════ -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-calendar3"></i></div>
+            <div>
+                <div class="section-title">Harvest Schedules</div>
+                <div class="section-subtitle">Planned and active harvests</div>
+            </div>
+        </div>
+        {% if user == farm.owner %}
+        <a href="{% url 'harvest_create' farm.pk %}" class="section-action">
+            <i class="bi bi-plus-lg"></i> Add Schedule
+        </a>
+        {% endif %}
+    </div>
+
+    {% if harvests %}
+    <div class="tbl-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Expected (kg)</th>
+                    <th>Actual (kg)</th>
+                    <th>Harvest Date</th>
+                    <th>Pickup Date</th>
+                    <th>Status</th>
+                    {% if user == farm.owner %}<th>Update</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in harvests %}
+                <tr>
+                    <td>{{ h.product_name }}</td>
+                    <td>{{ h.expected_quantity_kg }}</td>
+                    <td>{{ h.actual_quantity_kg|default:"—" }}</td>
+                    <td>{{ h.harvest_date }}</td>
+                    <td>{{ h.ready_for_pickup_date }}</td>
+                    <td>
+                        {% if h.status == 'completed' %}<span class="badge badge-green"><i class="bi bi-check-circle"></i> {{ h.get_status_display }}</span>
+                        {% elif h.status == 'ready' %}<span class="badge badge-blue"><i class="bi bi-clock-history"></i> {{ h.get_status_display }}</span>
+                        {% elif h.status == 'in_progress' %}<span class="badge badge-amber"><i class="bi bi-arrow-repeat"></i> {{ h.get_status_display }}</span>
+                        {% elif h.status == 'collected' %}<span class="badge badge-green"><i class="bi bi-bag-check"></i> {{ h.get_status_display }}</span>
+                        {% else %}<span class="badge badge-gray">{{ h.get_status_display }}</span>{% endif %}
+                    </td>
+                    {% if user == farm.owner %}
+                    <td>
+                        <form method="post" action="{% url 'harvest_update_status' h.pk %}" class="harvest-form">
+                            {% csrf_token %}
+                            <select name="status" class="harvest-select">
+                                <option value="planned"     {% if h.status == 'planned' %}selected{% endif %}>Planned</option>
+                                <option value="in_progress" {% if h.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="ready"       {% if h.status == 'ready' %}selected{% endif %}>Ready</option>
+                                <option value="collected"   {% if h.status == 'collected' %}selected{% endif %}>Collected</option>
+                                <option value="completed"   {% if h.status == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                            <button type="submit" class="btn-update">
+                                <i class="bi bi-check-lg"></i> Save
+                            </button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
+        <p>No harvest schedules added yet.</p>
+        {% if user == farm.owner %}
+        <a href="{% url 'harvest_create' farm.pk %}"><i class="bi bi-plus-lg"></i> Add First Schedule</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- ══ LOSS REPORTS ══════════════════════════════════════════ -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon icon-red"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+                <div class="section-title">Loss Reports</div>
+                <div class="section-subtitle">Post-harvest losses and causes</div>
+            </div>
+        </div>
+    </div>
+
+    {% if loss_reports %}
+    <div class="tbl-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty Lost (kg)</th>
+                    <th>Value Lost (KES)</th>
+                    <th>Primary Cause</th>
+                    <th>Incident Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in loss_reports %}
+                <tr>
+                    <td>{{ r.product_name }}</td>
+                    <td style="font-weight:600;color:#b83232;">{{ r.quantity_lost_kg }}</td>
+                    <td style="font-family:'Playfair Display',serif;font-size:14px;color:#b83232;">{{ r.estimated_value_lost|floatformat:0 }}</td>
+                    <td>
+                        <span class="badge badge-red"><i class="bi bi-exclamation-circle"></i> {{ r.get_primary_cause_display }}</span>
+                    </td>
+                    <td>{{ r.incident_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon" style="background:var(--green-50);color:var(--green-500);">
+            <i class="bi bi-check-circle"></i>
+        </div>
+        <p>No loss reports recorded. Excellent farm management! ✅</p>
+    </div>
+    {% endif %}
+</div>
+
 {% endblock %}
