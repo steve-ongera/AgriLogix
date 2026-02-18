@@ -58,7 +58,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'agrilogix.wsgi.application'
+WSGI_APPLICATION = 'AgriLogix.wsgi.application'
 
 DATABASES = {
     'default': {
@@ -110,6 +110,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', 'your-google-maps-key')
 
 # Cold Chain Alert Settings
-COLD_CHAIN_ALERT_EMAIL = os.environ.get('ALERT_EMAIL', 'alerts@agrilogix.com')
+COLD_CHAIN_ALERT_EMAIL = os.environ.get('ALERT_EMAIL', 'alerts@AgriLogix.com')
 TEMPERATURE_THRESHOLD_MIN = 2   # °C
 TEMPERATURE_THRESHOLD_MAX = 8   # °C

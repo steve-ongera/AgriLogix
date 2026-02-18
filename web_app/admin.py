@@ -154,7 +154,7 @@ class ProductAdmin(admin.ModelAdmin):
     )
 
     def total_value_display(self, obj):
-        return format_html('<b>KES {:,.0f}</b>', obj.total_value)
+        return format_html('<b>KES {:,.0f}</b>', float(obj.total_value))
     total_value_display.short_description = 'Total Value'
 
     def get_queryset(self, request):
@@ -170,7 +170,7 @@ class PriceHistoryAdmin(admin.ModelAdmin):
 
     def price_diff(self, obj):
         if obj.market_price:
-            diff = obj.market_price - obj.price
+            diff = float(obj.market_price) - float(obj.price)
             color = 'green' if diff > 0 else 'red'
             return format_html('<span style="color:{}">KES {:+,.0f}</span>', color, diff)
         return '—'
@@ -330,9 +330,8 @@ class OrderAdmin(admin.ModelAdmin):
     status_badge.short_description = 'Status'
 
     def farmer_earnings_display(self, obj):
-        return format_html('<b style="color:green">KES {:,.2f}</b>', obj.farmer_earnings)
+        return format_html('<b style="color:green">KES {:,.2f}</b>', float(obj.farmer_earnings))
     farmer_earnings_display.short_description = 'Farmer Earnings'
-
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('buyer', 'farmer')
 
@@ -454,7 +453,7 @@ class PostHarvestLossReportAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at']
 
     def value_lost_display(self, obj):
-        return format_html('<span style="color:red">KES {:,.0f}</span>', obj.estimated_value_lost)
+        return format_html('<span style="color:red">KES {:,.0f}</span>', float(obj.estimated_value_lost))
     value_lost_display.short_description = 'Value Lost'
 
 
@@ -468,15 +467,15 @@ class PlatformMetricAdmin(admin.ModelAdmin):
     date_hierarchy = 'date'
 
     def gmv_display(self, obj):
-        return format_html('<b>KES {:,.0f}</b>', obj.total_gmv)
+        return format_html('<b>KES {:,.0f}</b>', float(obj.total_gmv))
     gmv_display.short_description = 'GMV'
 
     def farmer_earnings_display(self, obj):
-        return format_html('<span style="color:green">KES {:,.0f}</span>', obj.total_farmer_earnings)
+        return format_html('<span style="color:green">KES {:,.0f}</span>', float(obj.total_farmer_earnings))
     farmer_earnings_display.short_description = 'Farmer Earnings'
 
     def middleman_savings_display(self, obj):
-        return format_html('<span style="color:blue">KES {:,.0f}</span>', obj.total_middleman_savings)
+        return format_html('<span style="color:blue">KES {:,.0f}</span>', float(obj.total_middleman_savings))
     middleman_savings_display.short_description = 'Savings vs Middlemen'
 
 
