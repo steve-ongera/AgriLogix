@@ -1,65 +1,539 @@
 {% extends 'base.html' %}
-{% block title %}Place Order{% endblock %}
+{% block title %}Place Order | AgriLogix{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ===== PAGE-SPECIFIC STYLES FOR ORDER FORM ===== */
+/* matching the second file's aesthetic + product detail vibe */
+
+/* Reuse root tokens from base, but define a few more */
+.order-layout {
+    display: flex;
+    width: 100%;
+    min-height: 100%;
+}
+
+/* Left panel — farm / product highlight (mirrors login panel) */
+.order-panel {
+    width: 380px;
+    flex-shrink: 0;
+    background: linear-gradient(160deg, var(--green-700) 0%, var(--green-500) 50%, var(--green-400) 100%);
+    display: flex;
+    flex-direction: column;
+    padding: 40px 36px;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    margin-right: 28px;
+    align-self: stretch;
+    box-shadow: var(--shadow-md);
+}
+.order-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.order-panel::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+    bottom: -120px; right: -100px;
+}
+.panel-deco-circle {
+    position: absolute;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.04);
+    top: -60px; left: -60px;
+}
+
+.panel-logo {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 32px; position: relative; z-index: 1;
+}
+.panel-logo-icon {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,.2);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #fff;
+    border: 1px solid rgba(255,255,255,.25);
+}
+.panel-logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700; color: #fff;
+}
+
+/* product summary card inside panel */
+.product-snapshot {
+    background: rgba(255,255,255,.08);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: var(--radius-lg);
+    padding: 24px 22px;
+    position: relative; z-index: 2;
+    margin-bottom: 30px;
+}
+.snapshot-category {
+    font-size: 11px; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.7);
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 10px;
+}
+.snapshot-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700; color: #fff;
+    line-height: 1.2; margin-bottom: 12px;
+}
+.snapshot-detail {
+    display: flex; flex-direction: column; gap: 10px;
+    margin: 16px 0 8px;
+}
+.snapshot-row {
+    display: flex; align-items: center;
+    color: rgba(255,255,255,.85);
+    font-size: 14px; gap: 10px;
+}
+.snapshot-row i {
+    width: 22px; font-size: 16px; color: rgba(255,255,255,.6);
+}
+.snapshot-highlight {
+    background: rgba(255,255,255,.15);
+    border-radius: 30px;
+    padding: 8px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 20px;
+    border: 1px solid rgba(255,255,255,.2);
+}
+.snapshot-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 700; color: #fff;
+}
+.snapshot-price small {
+    font-size: 14px; font-weight: 400; color: rgba(255,255,255,.7);
+}
+
+.order-panel-features {
+    display: flex; flex-direction: column; gap: 10px;
+    margin: auto 0 20px; position: relative; z-index: 1;
+}
+.order-panel-feature {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+.op-icon {
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px; flex-shrink: 0;
+}
+.op-text { font-size: 13px; color: rgba(255,255,255,.9); font-weight: 500; }
+
+.panel-tagline {
+    margin-top: auto; padding-top: 30px;
+    font-size: 11px; color: rgba(255,255,255,.45);
+    position: relative; z-index: 1;
+}
+
+/* Right side — form (uses base .section-card pattern) */
+.order-form-container {
+    flex: 1;
+    max-width: 560px;
+}
+.order-header {
+    margin-bottom: 24px;
+}
+.order-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700; color: var(--text-primary);
+    display: flex; align-items: center; gap: 8px;
+}
+.order-header p {
+    font-size: 14px; color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* reusing section-card from base but with form adjustments */
+.form-section {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.form-section-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+    font-family: 'Playfair Display', serif;
+    font-size: 15.5px; font-weight: 600; color: var(--text-primary);
+}
+.form-section-head i {
+    color: var(--green-500); font-size: 18px;
+}
+.form-section-body {
+    padding: 22px;
+}
+
+/* form rows inspired by second file .inline-label */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.form-row label {
+    width: 140px;
+    font-size: 13px; font-weight: 600; color: var(--text-second);
+    letter-spacing: .3px;
+}
+.form-row .field-wrapper {
+    flex: 1;
+    position: relative;
+}
+.form-row .field-wrapper i.input-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted); font-size: 15px;
+    pointer-events: none;
+    transition: color var(--dur);
+}
+.form-row input, .form-row select, .form-row textarea {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    background: var(--surface);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--text-primary);
+    outline: none;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.form-row textarea {
+    padding-left: 40px;
+    resize: vertical;
+    min-height: 70px;
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+    border-color: var(--green-300);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(120,192,72,.15);
+}
+.form-row input:focus ~ .input-icon,
+.form-row .field-wrapper:focus-within i {
+    color: var(--green-500);
+}
+.form-row input::placeholder, .form-row textarea::placeholder {
+    color: var(--text-placeholder);
+}
+/* select arrow */
+.form-row select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b8a58' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+}
+
+/* cold chain routes table (styled as data-table from product detail) */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+.data-table thead th {
+    padding: 10px 18px;
+    text-align: left;
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: .6px; text-transform: uppercase;
+    color: var(--text-muted); background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background .18s;
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--surface); }
+.data-table td {
+    padding: 11px 18px; color: var(--text-second);
+}
+.data-table td:first-child { font-weight: 500; color: var(--text-primary); }
+.route-cost { font-weight: 600; color: var(--green-700); }
+
+/* action buttons (mirror product detail) */
+.order-actions {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 20px;
+}
+.btn-order-primary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 28px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff; border: none; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 14px rgba(62,124,35,.3);
+    transition: opacity .2s, box-shadow .2s, transform .15s;
+    text-align: center;
+    border: none;
+}
+.btn-order-primary:hover {
+    opacity: .93; box-shadow: 0 5px 20px rgba(62,124,35,.38);
+    transform: translateY(-1px); color: #fff;
+}
+.btn-order-secondary {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 12px 24px;
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600; color: var(--text-second);
+    transition: all .18s; cursor: pointer;
+    text-decoration: none;
+}
+.btn-order-secondary:hover { border-color: var(--green-300); color: var(--green-700); background: var(--green-50); }
+
+/* no panel on narrow screens */
+@media (max-width: 900px) {
+    .order-panel { display: none; }
+    .order-form-container { max-width: 100%; }
+}
+@media (max-width: 600px) {
+    .form-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .form-row label { width: auto; }
+    .order-actions { flex-direction: column; align-items: stretch; }
+    .btn-order-primary, .btn-order-secondary { text-align: center; }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <i class="bi bi-house-door-fill"></i>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="{% url 'product_list' %}">Products</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>Place Order</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<h1>🛒 Place Order</h1>
+<div class="order-layout">
 
-<section>
-    <h2>Product: {{ product.name }}</h2>
-    <p>Farm: {{ product.farm.name }} | Location: {{ product.farm.location_name }}</p>
-    <p>Available: {{ product.quantity_available }} {{ product.unit }}</p>
-    <p>Price: KES {{ product.price_per_unit }} / {{ product.unit }}</p>
-    <p>Min Order: {{ product.minimum_order_quantity }} {{ product.unit }}</p>
-    {% if product.category.requires_cold_chain %}
-        <p>❄️ This product requires cold chain logistics.</p>
-    {% endif %}
-</section>
+    <!-- ===== LEFT PANEL (inspired by second file login panel) ===== -->
+    <div class="order-panel">
+        <div class="panel-deco-circle"></div>
 
-<form method="post">
-    {% csrf_token %}
-    <label>Quantity ({{ product.unit }})
-        <input type="number" name="quantity" step="0.01" min="{{ product.minimum_order_quantity }}" required>
-    </label><br>
-    <label>Payment Method
-        <select name="payment_method">
-            {% for value, label in payment_methods %}
-                <option value="{{ value }}">{{ label }}</option>
-            {% endfor %}
-        </select>
-    </label><br>
-    <label>Delivery Address
-        <input type="text" name="delivery_address" required placeholder="Full delivery address">
-    </label><br>
-    <label>Requested Delivery Date
-        <input type="date" name="requested_delivery_date">
-    </label><br>
-    <label>Estimated Shipping Cost (KES)
-        <input type="number" name="shipping_cost" step="0.01" value="0">
-    </label><br>
-    <label>Notes for Farmer
-        <textarea name="buyer_notes" rows="2"></textarea>
-    </label><br>
+        <div class="panel-logo">
+            <div class="panel-logo-icon"><i class="bi bi-basket3"></i></div>
+            <span class="panel-logo-text">New Order</span>
+        </div>
 
-    {% if cold_chain_routes %}
-    <section>
-        <h3>❄️ Available Cold Chain Routes</h3>
-        <table border="1">
-            <thead><tr><th>Route</th><th>Distance</th><th>Duration</th><th>Cost/kg</th></tr></thead>
-            <tbody>
-                {% for route in cold_chain_routes %}
-                <tr>
-                    <td>{{ route.origin_name }} → {{ route.destination_name }}</td>
-                    <td>{{ route.distance_km }} km</td>
-                    <td>{{ route.estimated_duration_hours }} hrs</td>
-                    <td>KES {{ route.base_cost_per_kg }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
-    {% endif %}
+        <!-- Product snapshot card -->
+        <div class="product-snapshot">
+            <div class="snapshot-category">
+                {% if product.category %}<i class="bi bi-tag"></i> {{ product.category.name }}{% endif %}
+            </div>
+            <div class="snapshot-name">{{ product.name }}</div>
+            {% if product.variety %}
+                <div style="color:rgba(255,255,255,.7); font-size:14px; margin-bottom:16px;">
+                    <i class="bi bi-flower2"></i> {{ product.variety }}
+                </div>
+            {% endif %}
 
-    <button type="submit">Place Order</button>
-    <a href="{% url 'product_detail' product.pk %}">Cancel</a>
-</form>
+            <div class="snapshot-detail">
+                <div class="snapshot-row">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>{{ product.farm.name }} · {{ product.farm.location_name|default:"Kenya" }}</span>
+                </div>
+                <div class="snapshot-row">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Available: <strong>{{ product.quantity_available }} {{ product.unit }}</strong></span>
+                </div>
+                <div class="snapshot-row">
+                    <i class="bi bi-dash-circle"></i>
+                    <span>Min order: {{ product.minimum_order_quantity }} {{ product.unit }}</span>
+                </div>
+                {% if product.category.requires_cold_chain %}
+                <div class="snapshot-row">
+                    <i class="bi bi-thermometer-snow"></i>
+                    <span>❄️ Cold chain required</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="snapshot-highlight">
+                <span style="color:white; opacity:.9;">Price</span>
+                <span class="snapshot-price">KES {{ product.price_per_unit|floatformat:2 }} <small>/{{ product.unit }}</small></span>
+            </div>
+        </div>
+
+        <div class="order-panel-features">
+            <div class="order-panel-feature">
+                <div class="op-icon"><i class="bi bi-shield-check"></i></div>
+                <span class="op-text">Secure payment & buyer protection</span>
+            </div>
+            <div class="order-panel-feature">
+                <div class="op-icon"><i class="bi bi-truck"></i></div>
+                <span class="op-text">Cold chain logistics available</span>
+            </div>
+            <div class="order-panel-feature">
+                <div class="op-icon"><i class="bi bi-chat"></i></div>
+                <span class="op-text">Direct farmer communication</span>
+            </div>
+        </div>
+
+        <div class="panel-tagline">
+            <i class="bi bi-flower1"></i> AgriLogix · Fresh from farm
+        </div>
+    </div>
+
+    <!-- ===== RIGHT SIDE: ORDER FORM ===== -->
+    <div class="order-form-container">
+
+        <div class="order-header">
+            <h2><i class="bi bi-pencil-square" style="color:var(--green-500);"></i> Order Details</h2>
+            <p>Fill in the information below to place your order</p>
+        </div>
+
+        <!-- main form (identical fields as first html) -->
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- quantity & payment section -->
+            <div class="form-section">
+                <div class="form-section-head">
+                    <i class="bi bi-bag-check"></i> Order Information
+                </div>
+                <div class="form-section-body">
+
+                    <div class="form-row">
+                        <label>Quantity ({{ product.unit }})</label>
+                        <div class="field-wrapper">
+                            <i class="bi bi-123 input-icon"></i>
+                            <input type="number" name="quantity" step="0.01" 
+                                   min="{{ product.minimum_order_quantity }}" 
+                                   placeholder="e.g. {{ product.minimum_order_quantity }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Payment Method</label>
+                        <div class="field-wrapper">
+                            <i class="bi bi-credit-card input-icon"></i>
+                            <select name="payment_method">
+                                {% for value, label in payment_methods %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Delivery Address</label>
+                        <div class="field-wrapper">
+                            <i class="bi bi-house-door input-icon"></i>
+                            <input type="text" name="delivery_address" 
+                                   placeholder="Full delivery address" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Requested Delivery Date</label>
+                        <div class="field-wrapper">
+                            <i class="bi bi-calendar3 input-icon"></i>
+                            <input type="date" name="requested_delivery_date">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Shipping Cost (KES)</label>
+                        <div class="field-wrapper">
+                            <i class="bi bi-cash-stack input-icon"></i>
+                            <input type="number" name="shipping_cost" step="0.01" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- notes section -->
+            <div class="form-section">
+                <div class="form-section-head">
+                    <i class="bi bi-chat-square-text"></i> Additional Notes
+                </div>
+                <div class="form-section-body">
+                    <div class="form-row">
+                        <label>Notes for Farmer</label>
+                        <div class="field-wrapper">
+                            <i class="bi bi-pencil input-icon"></i>
+                            <textarea name="buyer_notes" rows="2" placeholder="Any special instructions..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- cold chain routes table (exactly as first html) -->
+            {% if cold_chain_routes %}
+            <div class="form-section">
+                <div class="form-section-head">
+                    <i class="bi bi-thermometer-snow"></i> Available Cold Chain Routes
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Route</th>
+                                <th>Distance</th>
+                                <th>Duration</th>
+                                <th>Cost/kg</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for route in cold_chain_routes %}
+                            <tr>
+                                <td>{{ route.origin_name }} → {{ route.destination_name }}</td>
+                                <td>{{ route.distance_km }} km</td>
+                                <td>{{ route.estimated_duration_hours }} hrs</td>
+                                <td class="route-cost">KES {{ route.base_cost_per_kg }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- action buttons -->
+            <div class="order-actions">
+                <button type="submit" class="btn-order-primary">
+                    <i class="bi bi-check2-circle"></i> Place Order
+                </button>
+                <a href="{% url 'product_detail' product.pk %}" class="btn-order-secondary">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </a>
+            </div>
+        </form>
+
+        <!-- subtle footer note (like second file) -->
+        <div style="margin-top: 30px; display: flex; gap: 12px; align-items: center; font-size:12px; color:var(--text-placeholder); border-top:1px solid var(--border-light); padding-top:20px;">
+            <i class="bi bi-shield-check" style="color:var(--green-300);"></i>
+            <span>Your order is protected by AgriLogix buyer guarantee. We never share your data.</span>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -1,128 +1,739 @@
 {% extends 'base.html' %}
-{% block title %}Order {{ order.order_number }}{% endblock %}
+{% block title %}Order {{ order.order_number }} | AgriLogix{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ===== ORDER DETAIL STYLES — matching second file & product detail aesthetic ===== */
+
+/* order header with status badge */
+.order-header-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+.order-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.order-title h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+.order-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text-second);
+}
+.order-badge i { font-size: 12px; }
+.order-badge.pending { background: #fff4e5; border-color: #f5d08a; color: #b45b0a; }
+.order-badge.confirmed { background: #e5f0ff; border-color: #a0c8f0; color: #0f3d6e; }
+.order-badge.processing { background: #e5f0ff; border-color: #a0c8f0; color: #0f3d6e; }
+.order-badge.dispatched { background: #e0f7fa; border-color: #92d2dc; color: #016b7c; }
+.order-badge.delivered,
+.order-badge.completed { background: #eaf5df; border-color: #a8d8b0; color: #1d6b1d; }
+.order-badge.cancelled { background: #fff4f4; border-color: #f5b0b0; color: #b83232; }
+.order-badge.disputed { background: #feebdd; border-color: #fabb7c; color: #b45b0a; }
+
+.order-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+.order-meta i { color: var(--green-400); margin-right: 4px; }
+
+/* section card (reused from product detail) */
+.section-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    margin-bottom: 26px;
+}
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.section-head i {
+    color: var(--green-500);
+    font-size: 18px;
+}
+.section-body {
+    padding: 20px 22px;
+}
+
+/* two-column info rows */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px 28px;
+}
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.info-icon {
+    width: 34px; height: 34px;
+    background: var(--surface);
+    border: 1.5px solid var(--border-light);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green-500);
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.info-content {
+    flex: 1;
+}
+.info-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--text-placeholder);
+    margin-bottom: 3px;
+}
+.info-value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+.info-value a {
+    color: var(--green-500);
+    transition: color .18s;
+}
+.info-value a:hover { color: var(--green-700); }
+
+/* data tables (matching product detail) */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.data-table thead th {
+    padding: 12px 18px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--border);
+    white-space: nowrap;
+}
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background .18s;
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--surface); }
+.data-table td {
+    padding: 14px 18px;
+    color: var(--text-second);
+    vertical-align: middle;
+}
+.data-table td:first-child { font-weight: 500; color: var(--text-primary); }
+.data-table .price-cell {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    color: var(--green-700);
+}
+.data-table .cold-chain-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #e0f7fa;
+    border-radius: 40px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #016b7c;
+    border: 1px solid #b2ebf2;
+}
+.data-table .cold-chain-badge i { font-size: 11px; }
+
+/* financial summary table (special) */
+.financial-table {
+    width: 100%;
+    max-width: 460px;
+    border-collapse: collapse;
+}
+.financial-table tr {
+    border-bottom: 1px dashed var(--border-light);
+}
+.financial-table tr:last-child { border-bottom: none; }
+.financial-table td {
+    padding: 12px 8px;
+    font-size: 14px;
+}
+.financial-table td:first-child {
+    font-weight: 500;
+    color: var(--text-muted);
+}
+.financial-table td:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.financial-table .total-row td {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--green-700);
+    border-top: 2px solid var(--border);
+    padding-top: 14px;
+}
+.financial-table .earnings-row td:last-child {
+    color: var(--green-700);
+}
+
+/* action cards (for farmer / admin forms) */
+.action-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-top: 12px;
+}
+.action-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-primary);
+}
+.action-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+}
+.action-form .field-group {
+    flex: 1;
+    min-width: 200px;
+}
+.action-form label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+.action-form select, .action-form textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+.action-form select:focus, .action-form textarea:focus {
+    border-color: var(--green-300);
+    box-shadow: 0 0 0 3px rgba(120,192,72,.15);
+}
+.action-form textarea { resize: vertical; min-height: 70px; }
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(62,124,35,.25);
+    transition: opacity .2s, box-shadow .2s, transform .15s;
+}
+.btn-primary:hover {
+    opacity: .92;
+    box-shadow: 0 5px 16px rgba(62,124,35,.3);
+    transform: translateY(-1px);
+    color: #fff;
+}
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-second);
+    transition: all .18s;
+    cursor: pointer;
+    text-decoration: none;
+}
+.btn-secondary:hover {
+    border-color: var(--green-300);
+    color: var(--green-700);
+    background: var(--green-50);
+}
+.btn-danger {
+    background: #fff4f4;
+    border: 1.5px solid #f5b0b0;
+    color: #b83232;
+}
+.btn-danger:hover {
+    background: #ffe8e8;
+    border-color: #b83232;
+    color: #9b2020;
+}
+
+/* tracking events */
+.tracking-timeline {
+    margin-top: 15px;
+}
+.track-event {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 10px 0;
+    border-left: 2px solid var(--border);
+    margin-left: 12px;
+    padding-left: 22px;
+    position: relative;
+}
+.track-event::before {
+    content: '';
+    width: 10px; height: 10px;
+    background: var(--green-400);
+    border: 2px solid var(--white);
+    border-radius: 50%;
+    position: absolute;
+    left: -6px; top: 15px;
+}
+.track-event:last-child { border-left-color: transparent; }
+.track-time {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 110px;
+}
+.track-detail {
+    flex: 1;
+}
+.track-note {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-second);
+}
+.track-speed {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+.track-speed i { color: var(--green-400); font-size: 11px; }
+
+/* dispute list */
+.dispute-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+.dispute-item:last-child { border-bottom: none; }
+.dispute-reason {
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.dispute-status {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 30px;
+}
+.dispute-status.open { background: #fff4e5; color: #b45b0a; }
+.dispute-status.resolved { background: #eaf5df; color: #1d6b1d; }
+.dispute-date { font-size: 12px; color: var(--text-muted); }
+
+/* responsive */
+@media (max-width: 700px) {
+    .order-header-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .data-table thead { display: none; }
+    .data-table tbody tr {
+        display: block;
+        padding: 16px;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        margin-bottom: 12px;
+    }
+    .data-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dotted var(--border-light);
+    }
+    .data-table td:last-child { border-bottom: none; }
+    .data-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 12px;
+    }
+    .action-form { flex-direction: column; align-items: stretch; }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <i class="bi bi-house-door-fill"></i>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="{% url 'order_list' %}">Orders</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>Order {{ order.order_number }}</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<h1>📦 Order #{{ order.order_number }}</h1>
-<p>Status: {{ order.get_status_display }} | Date: {{ order.created_at|date:"d M Y H:i" }}</p>
 
-<section>
-    <h2>Parties</h2>
-    <p>Buyer: {{ order.buyer.get_full_name }} ({{ order.buyer.email }})</p>
-    <p>Farmer: {{ order.farmer.get_full_name }} ({{ order.farmer.phone }})</p>
-</section>
-
-<section>
-    <h2>Order Items</h2>
-    <table border="1">
-        <thead>
-            <tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th><th>Cold Chain</th></tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr>
-                <td><a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a></td>
-                <td>{{ item.quantity }} {{ item.product.unit }}</td>
-                <td>KES {{ item.unit_price }}</td>
-                <td>KES {{ item.subtotal|floatformat:0 }}</td>
-                <td>{{ item.requires_cold_chain|yesno:"Yes,No" }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</section>
-
-<section>
-    <h2>Financials</h2>
-    <table border="1">
-        <tr><th>Subtotal</th><td>KES {{ order.subtotal|floatformat:2 }}</td></tr>
-        <tr><th>Shipping</th><td>KES {{ order.shipping_cost|floatformat:2 }}</td></tr>
-        <tr><th>Platform Fee (2.5%)</th><td>KES {{ order.platform_fee|floatformat:2 }}</td></tr>
-        <tr><th>Total</th><td><strong>KES {{ order.total_amount|floatformat:2 }}</strong></td></tr>
-        <tr><th>Farmer Earnings</th><td>KES {{ order.farmer_earnings|floatformat:2 }}</td></tr>
-        <tr><th>Payment Method</th><td>{{ order.get_payment_method_display }}</td></tr>
-        <tr><th>Payment Ref</th><td>{{ order.payment_reference|default:"—" }}</td></tr>
-    </table>
-</section>
-
-<section>
-    <h2>Delivery</h2>
-    <p>Address: {{ order.delivery_address }}</p>
-    <p>Requested By: {{ order.requested_delivery_date|default:"ASAP" }}</p>
-    <p>Notes: {{ order.buyer_notes|default:"—" }}</p>
-</section>
-
-{% if shipment %}
-<section>
-    <h2>🚛 Shipment: {{ shipment.shipment_code }}</h2>
-    <p>Driver: {{ shipment.driver.get_full_name }}</p>
-    <p>Vehicle: {{ shipment.vehicle.plate_number }}</p>
-    <p>Status: {{ shipment.get_status_display }}</p>
-    <p>Pickup: {{ shipment.actual_pickup|default:"Pending" }}</p>
-    <p>Delivered: {{ shipment.actual_delivery|default:"Pending" }}</p>
-    <a href="{% url 'shipment_detail' shipment.pk %}">Track Shipment →</a>
-
-    {% if tracking %}
-    <h3>Tracking Events</h3>
-    <table border="1">
-        <thead><tr><th>Note</th><th>Speed</th><th>Time</th></tr></thead>
-        <tbody>
-            {% for t in tracking %}
-            <tr>
-                <td>{{ t.status_note }}</td>
-                <td>{{ t.speed_kmh }} km/h</td>
-                <td>{{ t.timestamp|date:"d M H:i" }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% endif %}
-</section>
-{% endif %}
-
-<!-- ACTIONS -->
-{% if order.status == 'pending' and user == order.farmer %}
-<section>
-    <h2>Farmer Actions</h2>
-    <form method="post" action="{% url 'order_confirm' order.pk %}">
-        {% csrf_token %}
-        <textarea name="farmer_notes" placeholder="Add notes to buyer..." rows="2"></textarea><br>
-        <button name="action" value="confirm">✅ Confirm Order</button>
-        <button name="action" value="cancel">❌ Cancel Order</button>
-    </form>
-</section>
-{% endif %}
-
-{% if user.role == 'admin' or user == order.farmer %}
-<section>
-    <h2>Update Status</h2>
-    <form method="post" action="{% url 'order_update_status' order.pk %}">
-        {% csrf_token %}
-        <select name="status">
-            <option value="confirmed">Confirmed</option>
-            <option value="processing">Processing</option>
-            <option value="dispatched">Dispatched</option>
-            <option value="delivered">Delivered</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-        </select>
-        <button type="submit">Update</button>
-    </form>
-</section>
-{% endif %}
-
-{% if order.status not in 'cancelled,completed,disputed' %}
-<section>
-    <h2>⚠️ Disputes</h2>
-    {% if disputes %}
-        {% for d in disputes %}
-            <p>{{ d.get_reason_display }} — {{ d.get_status_display }} — {{ d.created_at|date:"d M Y" }}</p>
-        {% endfor %}
-    {% else %}
-        {% if user == order.buyer or user == order.farmer %}
-            <a href="{% url 'dispute_create' order.pk %}">Raise a Dispute</a>
+<!-- ===== HEADER WITH STATUS ===== -->
+<div class="order-header-row">
+    <div class="order-title">
+        <h1><i class="bi bi-receipt" style="color:var(--green-500);"></i> Order #{{ order.order_number }}</h1>
+        <span class="order-badge {{ order.status }}">
+            <i class="bi {% if order.status == 'pending' %}bi-clock{% elif order.status == 'confirmed' %}bi-check-circle{% elif order.status == 'processing' %}bi-gear{% elif order.status == 'dispatched' %}bi-truck{% elif order.status == 'delivered' or order.status == 'completed' %}bi-check2-circle{% elif order.status == 'cancelled' %}bi-x-circle{% elif order.status == 'disputed' %}bi-exclamation-triangle{% endif %}"></i>
+            {{ order.get_status_display }}
+        </span>
+    </div>
+    <div class="order-meta">
+        <span><i class="bi bi-calendar3"></i> {{ order.created_at|date:"d M Y H:i" }}</span>
+        {% if order.payment_reference %}
+        <span><i class="bi bi-upc-scan"></i> Ref: {{ order.payment_reference }}</span>
         {% endif %}
-    {% endif %}
-</section>
+    </div>
+</div>
+
+<!-- ===== PARTIES ===== -->
+<div class="section-card">
+    <div class="section-head">
+        <i class="bi bi-people"></i> Parties
+    </div>
+    <div class="section-body">
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-icon"><i class="bi bi-person-badge"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Buyer</div>
+                    <div class="info-value">{{ order.buyer.get_full_name|default:order.buyer.username }} · {{ order.buyer.email }}</div>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon"><i class="bi bi-person-workspace"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Farmer</div>
+                    <div class="info-value">{{ order.farmer.get_full_name|default:order.farmer.username }} · {{ order.farmer.phone|default:"—" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ORDER ITEMS ===== -->
+<div class="section-card">
+    <div class="section-head">
+        <i class="bi bi-basket"></i> Order Items
+    </div>
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Subtotal</th>
+                    <th>Cold Chain</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td data-label="Product"><a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a></td>
+                    <td data-label="Qty">{{ item.quantity }} {{ item.product.unit }}</td>
+                    <td data-label="Unit Price" class="price-cell">KES {{ item.unit_price|floatformat:2 }}</td>
+                    <td data-label="Subtotal" class="price-cell">KES {{ item.subtotal|floatformat:0 }}</td>
+                    <td data-label="Cold Chain">
+                        {% if item.requires_cold_chain %}
+                        <span class="cold-chain-badge"><i class="bi bi-thermometer-snow"></i> Yes</span>
+                        {% else %}
+                        <span style="color:var(--text-placeholder);">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ===== FINANCIALS & DELIVERY ===== -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 26px;">
+    <!-- Financials card -->
+    <div class="section-card" style="margin-bottom:0;">
+        <div class="section-head">
+            <i class="bi bi-currency-exchange"></i> Financials
+        </div>
+        <div class="section-body">
+            <table class="financial-table">
+                <tr><td>Subtotal</td><td>KES {{ order.subtotal|floatformat:2 }}</td></tr>
+                <tr><td>Shipping</td><td>KES {{ order.shipping_cost|floatformat:2 }}</td></tr>
+                <tr><td>Platform Fee (2.5%)</td><td>KES {{ order.platform_fee|floatformat:2 }}</td></tr>
+                <tr class="total-row"><td>Total</td><td>KES {{ order.total_amount|floatformat:2 }}</td></tr>
+                <tr class="earnings-row"><td>Farmer Earnings</td><td>KES {{ order.farmer_earnings|floatformat:2 }}</td></tr>
+                <tr><td>Payment Method</td><td>{{ order.get_payment_method_display }}</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Delivery card -->
+    <div class="section-card" style="margin-bottom:0;">
+        <div class="section-head">
+            <i class="bi bi-geo-alt"></i> Delivery
+        </div>
+        <div class="section-body">
+            <div class="info-grid" style="grid-template-columns:1fr;">
+                <div class="info-item">
+                    <div class="info-icon"><i class="bi bi-pin-map"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Address</div>
+                        <div class="info-value">{{ order.delivery_address }}</div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon"><i class="bi bi-calendar-week"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Requested By</div>
+                        <div class="info-value">{{ order.requested_delivery_date|date:"d M Y"|default:"ASAP" }}</div>
+                    </div>
+                </div>
+                {% if order.buyer_notes %}
+                <div class="info-item">
+                    <div class="info-icon"><i class="bi bi-chat"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Buyer Notes</div>
+                        <div class="info-value" style="font-style:italic;">{{ order.buyer_notes }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SHIPMENT SECTION ===== -->
+{% if shipment %}
+<div class="section-card">
+    <div class="section-head">
+        <i class="bi bi-truck"></i> Shipment: {{ shipment.shipment_code }}
+        <span style="margin-left: auto; font-size:13px; background:var(--surface); padding:4px 12px; border-radius:40px;">
+            {{ shipment.get_status_display }}
+        </span>
+    </div>
+    <div class="section-body">
+        <div class="info-grid" style="grid-template-columns:repeat(auto-fill, minmax(200px,1fr));">
+            <div class="info-item">
+                <div class="info-icon"><i class="bi bi-person"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Driver</div>
+                    <div class="info-value">{{ shipment.driver.get_full_name|default:"—" }}</div>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon"><i class="bi bi-truck-front"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Vehicle</div>
+                    <div class="info-value">{{ shipment.vehicle.plate_number|default:"—" }}</div>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon"><i class="bi bi-box-seam"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Pickup</div>
+                    <div class="info-value">{{ shipment.actual_pickup|date:"d M Y H:i"|default:"Pending" }}</div>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon"><i class="bi bi-check2-circle"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Delivered</div>
+                    <div class="info-value">{{ shipment.actual_delivery|date:"d M Y H:i"|default:"Pending" }}</div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:16px;">
+            <a href="{% url 'shipment_detail' shipment.pk %}" class="btn-secondary">
+                <i class="bi bi-geo-alt"></i> Track Full Shipment →
+            </a>
+        </div>
+
+        <!-- Tracking events (if any) -->
+        {% if tracking %}
+        <div style="margin-top:24px;">
+            <h4 style="font-family:'Playfair Display'; font-size:15px; margin-bottom:10px;">
+                <i class="bi bi-pin-map-fill" style="color:var(--green-400);"></i> Tracking Events
+            </h4>
+            <div class="tracking-timeline">
+                {% for t in tracking %}
+                <div class="track-event">
+                    <div class="track-time">{{ t.timestamp|date:"d M H:i" }}</div>
+                    <div class="track-detail">
+                        <div class="track-note">{{ t.status_note }}</div>
+                        {% if t.speed_kmh %}
+                        <div class="track-speed"><i class="bi bi-speedometer2"></i> {{ t.speed_kmh }} km/h</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
 {% endif %}
 
+<!-- ===== FARMER ACTIONS (pending order) ===== -->
+{% if order.status == 'pending' and user == order.farmer %}
+<div class="section-card">
+    <div class="section-head">
+        <i class="bi bi-tools"></i> Farmer Actions
+    </div>
+    <div class="section-body">
+        <form method="post" action="{% url 'order_confirm' order.pk %}" class="action-form">
+            {% csrf_token %}
+            <div class="field-group">
+                <label><i class="bi bi-chat-square-text"></i> Notes to buyer</label>
+                <textarea name="farmer_notes" placeholder="Add notes to buyer..." rows="2"></textarea>
+            </div>
+            <div class="action-buttons">
+                <button type="submit" name="action" value="confirm" class="btn-primary">
+                    <i class="bi bi-check2-circle"></i> Confirm Order
+                </button>
+                <button type="submit" name="action" value="cancel" class="btn-primary btn-danger">
+                    <i class="bi bi-x-circle"></i> Cancel Order
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- ===== STATUS UPDATE (admin or farmer) ===== -->
+{% if user.role == 'admin' or user == order.farmer %}
+<div class="section-card">
+    <div class="section-head">
+        <i class="bi bi-arrow-repeat"></i> Update Status
+    </div>
+    <div class="section-body">
+        <form method="post" action="{% url 'order_update_status' order.pk %}" class="action-form">
+            {% csrf_token %}
+            <div class="field-group">
+                <label><i class="bi bi-tag"></i> New status</label>
+                <select name="status">
+                    <option value="confirmed">✅ Confirmed</option>
+                    <option value="processing">⚙️ Processing</option>
+                    <option value="dispatched">🚛 Dispatched</option>
+                    <option value="delivered">📦 Delivered</option>
+                    <option value="completed">🏁 Completed</option>
+                    <option value="cancelled">❌ Cancelled</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary"><i class="bi bi-arrow-right-circle"></i> Update</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- ===== DISPUTES ===== -->
+{% if order.status not in 'cancelled,completed,disputed' %}
+<div class="section-card">
+    <div class="section-head">
+        <i class="bi bi-exclamation-triangle" style="color:var(--amber-400);"></i> Disputes
+    </div>
+    <div class="section-body">
+        {% if disputes %}
+            {% for d in disputes %}
+            <div class="dispute-item">
+                <div class="dispute-reason">
+                    <i class="bi bi-chat-square-text"></i>
+                    <span>{{ d.get_reason_display }}</span>
+                    <span class="dispute-status {{ d.status }}">{{ d.get_status_display }}</span>
+                </div>
+                <div class="dispute-date">{{ d.created_at|date:"d M Y" }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px;">
+                <span style="color:var(--text-muted);"><i class="bi bi-check-circle" style="color:var(--green-400);"></i> No disputes raised</span>
+                {% if user == order.buyer or user == order.farmer %}
+                <a href="{% url 'dispute_create' order.pk %}" class="btn-secondary">
+                    <i class="bi bi-flag"></i> Raise a Dispute
+                </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- subtle footer note (like in order form) -->
+<div style="margin-top: 20px; display: flex; gap: 12px; align-items: center; font-size:12px; color:var(--text-placeholder); border-top:1px solid var(--border-light); padding-top:18px;">
+    <i class="bi bi-shield-check" style="color:var(--green-300);"></i>
+    <span>Order details are confidential and protected by AgriLogix.</span>
+</div>
 {% endblock %}

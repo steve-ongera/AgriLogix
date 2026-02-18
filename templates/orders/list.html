@@ -1,44 +1,437 @@
 {% extends 'base.html' %}
-{% block title %}Orders{% endblock %}
+{% block title %}Orders | AgriLogix{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ===== ORDERS LIST — consistent with product & order detail styling ===== */
+
+/* filter bar (matches second file's form styling) */
+.filter-bar {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-bottom: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 18px 24px;
+    box-shadow: var(--shadow-xs);
+}
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 180px;
+}
+.filter-group label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.filter-group label i {
+    color: var(--green-400);
+    font-size: 13px;
+}
+.filter-group select, .filter-group input {
+    height: 42px;
+    padding: 0 14px;
+    background: var(--surface);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+    width: 100%;
+}
+.filter-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b8a58' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+}
+.filter-group select:focus, .filter-group input:focus {
+    border-color: var(--green-300);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(120,192,72,.15);
+}
+
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+.btn-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(62,124,35,.25);
+    transition: opacity .2s, box-shadow .2s, transform .15s;
+    white-space: nowrap;
+}
+.btn-filter:hover {
+    opacity: .92;
+    box-shadow: 0 5px 16px rgba(62,124,35,.3);
+    transform: translateY(-1px);
+}
+.btn-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 18px;
+    height: 42px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-second);
+    transition: all .18s;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.btn-clear:hover {
+    border-color: var(--green-300);
+    color: var(--green-700);
+    background: var(--green-50);
+}
+
+/* orders table — inherits .data-table from base/product detail but we enhance */
+.table-container {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+}
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.data-table thead th {
+    padding: 16px 18px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--border);
+    white-space: nowrap;
+}
+.data-table thead th i {
+    margin-right: 5px;
+    font-size: 12px;
+    color: var(--green-400);
+}
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background .18s;
+}
+.data-table tbody tr:hover {
+    background: var(--surface);
+}
+.data-table tbody tr:last-child {
+    border-bottom: none;
+}
+.data-table td {
+    padding: 16px 18px;
+    color: var(--text-second);
+    vertical-align: middle;
+}
+.data-table td a {
+    color: var(--green-500);
+    font-weight: 500;
+    transition: color .18s;
+    text-decoration: none;
+}
+.data-table td a:hover {
+    color: var(--green-700);
+    text-decoration: underline;
+}
+
+/* status badge (matches order detail) */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text-second);
+    white-space: nowrap;
+}
+.status-badge i { font-size: 10px; }
+.status-badge.pending { background: #fff4e5; border-color: #f5d08a; color: #b45b0a; }
+.status-badge.confirmed { background: #e5f0ff; border-color: #a0c8f0; color: #0f3d6e; }
+.status-badge.processing { background: #e5f0ff; border-color: #a0c8f0; color: #0f3d6e; }
+.status-badge.dispatched { background: #e0f7fa; border-color: #92d2dc; color: #016b7c; }
+.status-badge.delivered,
+.status-badge.completed { background: #eaf5df; border-color: #a8d8b0; color: #1d6b1d; }
+.status-badge.cancelled { background: #fff4f4; border-color: #f5b0b0; color: #b83232; }
+.status-badge.disputed { background: #feebdd; border-color: #fabb7c; color: #b45b0a; }
+
+/* payment method chip */
+.payment-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: var(--off-white);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+}
+.payment-chip i { font-size: 10px; color: var(--green-400); }
+
+/* action link */
+.action-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-second);
+    transition: all .18s;
+    text-decoration: none;
+}
+.action-link:hover {
+    border-color: var(--green-300);
+    color: var(--green-700);
+    background: var(--white);
+}
+.action-link i { font-size: 12px; }
+
+/* empty state */
+.empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-muted);
+}
+.empty-state i {
+    font-size: 48px;
+    color: var(--green-100);
+    margin-bottom: 16px;
+}
+.empty-state p {
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+.empty-state .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff;
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity .2s;
+}
+.empty-state .btn-primary:hover {
+    opacity: .9;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .filter-actions { margin-left: 0; }
+    .filter-group { min-width: auto; }
+    .data-table thead { display: none; }
+    .data-table tbody tr {
+        display: block;
+        padding: 20px;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        margin-bottom: 16px;
+    }
+    .data-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px dotted var(--border-light);
+    }
+    .data-table td:last-child { border-bottom: none; }
+    .data-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+    .action-link { margin-top: 4px; }
+}
+
+@media (max-width: 480px) {
+    .filter-actions { flex-direction: column; width: 100%; }
+    .btn-filter, .btn-clear { width: 100%; justify-content: center; }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <i class="bi bi-house-door-fill"></i>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>Orders</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<h1>📦 Orders</h1>
 
-<form method="get">
-    <label>Status
+<!-- ===== PAGE HEADER ===== -->
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+    <h1 style="font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:10px;">
+        <i class="bi bi-receipt" style="color:var(--green-500);"></i> Orders
+    </h1>
+    <span class="order-meta" style="color:var(--text-muted);">
+        <i class="bi bi-box-seam"></i> {{ orders|length }} order{{ orders|length|pluralize }}
+    </span>
+</div>
+
+<!-- ===== FILTER BAR (styled like second file forms) ===== -->
+<form method="get" class="filter-bar">
+    <div class="filter-group">
+        <label><i class="bi bi-tag"></i> Status</label>
         <select name="status">
             <option value="">All Statuses</option>
             {% for value, label in status_choices %}
                 <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
         </select>
-    </label>
-    <button type="submit">Filter</button>
-    <a href="{% url 'order_list' %}">Clear</a>
+    </div>
+
+    <!-- optional: add date filter later but keep original simplicity -->
+    <div class="filter-actions">
+        <button type="submit" class="btn-filter">
+            <i class="bi bi-funnel"></i> Filter
+        </button>
+        <a href="{% url 'order_list' %}" class="btn-clear">
+            <i class="bi bi-x-lg"></i> Clear
+        </a>
+    </div>
 </form>
 
-<table border="1">
-    <thead>
-        <tr>
-            <th>Order #</th><th>Buyer</th><th>Farmer</th><th>Total (KES)</th>
-            <th>Status</th><th>Payment</th><th>Date</th><th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for order in orders %}
-        <tr>
-            <td><a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a></td>
-            <td>{{ order.buyer.get_full_name }}</td>
-            <td>{{ order.farmer.get_full_name }}</td>
-            <td>{{ order.total_amount|floatformat:0 }}</td>
-            <td>{{ order.get_status_display }}</td>
-            <td>{{ order.get_payment_method_display }}</td>
-            <td>{{ order.created_at|date:"d M Y" }}</td>
-            <td><a href="{% url 'order_detail' order.pk %}">View</a></td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="8">No orders found.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- ===== ORDERS TABLE ===== -->
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th><i class="bi bi-hash"></i> Order #</th>
+                <th><i class="bi bi-person"></i> Buyer</th>
+                <th><i class="bi bi-person-workspace"></i> Farmer</th>
+                <th><i class="bi bi-currency-dollar"></i> Total (KES)</th>
+                <th><i class="bi bi-activity"></i> Status</th>
+                <th><i class="bi bi-credit-card"></i> Payment</th>
+                <th><i class="bi bi-calendar3"></i> Date</th>
+                <th><i class="bi bi-gear"></i> Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td data-label="Order #">
+                    <a href="{% url 'order_detail' order.pk %}"><strong>{{ order.order_number }}</strong></a>
+                </td>
+                <td data-label="Buyer">{{ order.buyer.get_full_name|default:order.buyer.username }}</td>
+                <td data-label="Farmer">{{ order.farmer.get_full_name|default:order.farmer.username }}</td>
+                <td data-label="Total (KES)" style="font-weight:600; color:var(--green-700);">
+                    KES {{ order.total_amount|floatformat:0 }}
+                </td>
+                <td data-label="Status">
+                    <span class="status-badge {{ order.status }}">
+                        <i class="bi 
+                            {% if order.status == 'pending' %}bi-clock
+                            {% elif order.status == 'confirmed' %}bi-check-circle
+                            {% elif order.status == 'processing' %}bi-gear
+                            {% elif order.status == 'dispatched' %}bi-truck
+                            {% elif order.status == 'delivered' or order.status == 'completed' %}bi-check2-circle
+                            {% elif order.status == 'cancelled' %}bi-x-circle
+                            {% elif order.status == 'disputed' %}bi-exclamation-triangle
+                            {% else %}bi-circle{% endif %}">
+                        </i>
+                        {{ order.get_status_display }}
+                    </span>
+                </td>
+                <td data-label="Payment">
+                    <span class="payment-chip">
+                        <i class="bi 
+                            {% if order.payment_method == 'mpesa' %}bi-phone
+                            {% elif order.payment_method == 'bank' %}bi-bank
+                            {% elif order.payment_method == 'cash' %}bi-cash
+                            {% else %}bi-credit-card{% endif %}">
+                        </i>
+                        {{ order.get_payment_method_display }}
+                    </span>
+                </td>
+                <td data-label="Date">{{ order.created_at|date:"d M Y" }}</td>
+                <td data-label="Actions">
+                    <a href="{% url 'order_detail' order.pk %}" class="action-link">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="padding:0;">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>No orders found.</p>
+                        {% if request.GET.status %}
+                            <p style="font-size:13px;">Try clearing your filters.</p>
+                            <a href="{% url 'order_list' %}" class="btn-primary">
+                                <i class="bi bi-funnel"></i> Clear filters
+                            </a>
+                        {% else %}
+                            <p style="font-size:13px;">Orders will appear here once buyers place them.</p>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- subtle footer note (consistent with other pages) -->
+<div style="margin-top: 30px; display: flex; gap: 12px; align-items: center; font-size:12px; color:var(--text-placeholder); border-top:1px solid var(--border-light); padding-top:18px;">
+    <i class="bi bi-shield-check" style="color:var(--green-300);"></i>
+    <span>Showing {{ orders|length }} order{{ orders|length|pluralize }}. Secure data encrypted.</span>
+</div>
 {% endblock %}

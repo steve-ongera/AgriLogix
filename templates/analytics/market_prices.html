@@ -1,38 +1,403 @@
 {% extends 'base.html' %}
-{% block title %}Market Prices{% endblock %}
+{% block title %}Market Prices | AgriLogix{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ===== MARKET PRICES — slim table, compact & elegant ===== */
+
+/* page header */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+.page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.page-header h1 i {
+    color: var(--green-500);
+}
+.page-header .record-count {
+    font-size: 14px;
+    color: var(--text-muted);
+    background: var(--surface);
+    padding: 6px 14px;
+    border-radius: 40px;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.page-header .record-count i {
+    color: var(--green-400);
+}
+
+/* filter bar (compact) */
+.filter-bar {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px 20px;
+    box-shadow: var(--shadow-xs);
+}
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+}
+.filter-group label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.filter-group label i {
+    color: var(--green-400);
+    font-size: 12px;
+}
+.filter-group select, .filter-group input {
+    height: 38px;
+    padding: 0 12px;
+    background: var(--surface);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+    width: 100%;
+}
+.filter-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b8a58' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+}
+.filter-group select:focus, .filter-group input:focus {
+    border-color: var(--green-300);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(120,192,72,.15);
+}
+
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+.btn-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 18px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(62,124,35,.25);
+    transition: opacity .2s, box-shadow .2s, transform .15s;
+    white-space: nowrap;
+}
+.btn-filter:hover {
+    opacity: .92;
+    box-shadow: 0 4px 12px rgba(62,124,35,.3);
+    transform: translateY(-1px);
+}
+.btn-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 14px;
+    height: 38px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-second);
+    transition: all .18s;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.btn-clear:hover {
+    border-color: var(--green-300);
+    color: var(--green-700);
+    background: var(--green-50);
+}
+
+/* slim table container */
+.table-container {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+}
+
+/* SLIM TABLE — reduced padding, smaller font */
+.slim-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px; /* slightly smaller than default */
+}
+.slim-table thead th {
+    padding: 10px 16px; /* slim padding */
+    text-align: left;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--border);
+    white-space: nowrap;
+}
+.slim-table thead th i {
+    margin-right: 4px;
+    font-size: 11px;
+    color: var(--green-400);
+}
+.slim-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background .18s;
+}
+.slim-table tbody tr:hover {
+    background: var(--surface);
+}
+.slim-table tbody tr:last-child {
+    border-bottom: none;
+}
+.slim-table td {
+    padding: 10px 16px; /* slim padding */
+    color: var(--text-second);
+    vertical-align: middle;
+}
+
+/* price cell with subtle emphasis */
+.price-cell {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    color: var(--green-700);
+    font-size: 14px;
+}
+.price-cell::before {
+    content: 'KES ';
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-right: 2px;
+}
+
+/* market badge (optional) */
+.market-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: var(--off-white);
+    border-radius: 40px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-second);
+    border: 1px solid var(--border);
+}
+.market-badge i {
+    color: var(--green-400);
+    font-size: 10px;
+}
+
+/* empty state */
+.empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+.empty-state i {
+    font-size: 42px;
+    color: var(--green-100);
+    margin-bottom: 12px;
+}
+.empty-state p {
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+.empty-state .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    transition: opacity .2s;
+}
+.empty-state .btn-primary:hover {
+    opacity: .9;
+}
+
+/* responsive */
+@media (max-width: 700px) {
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .filter-actions { margin-left: 0; }
+    .filter-group { min-width: auto; }
+    
+    .slim-table thead { display: none; }
+    .slim-table tbody tr {
+        display: block;
+        padding: 16px;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        margin-bottom: 12px;
+    }
+    .slim-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dotted var(--border-light);
+    }
+    .slim-table td:last-child { border-bottom: none; }
+    .slim-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-actions { flex-direction: column; width: 100%; }
+    .btn-filter, .btn-clear { width: 100%; justify-content: center; }
+    .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <i class="bi bi-house-door-fill"></i>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>Market Prices</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<h1>💹 Market Price Index</h1>
 
-<form method="get">
-    <label>Market
+<!-- ===== HEADER WITH COUNT ===== -->
+<div class="page-header">
+    <h1>
+        <i class="bi bi-graph-up-arrow"></i> Market Price Index
+    </h1>
+    <div class="record-count">
+        <i class="bi bi-database"></i> {{ prices|length }} record{{ prices|length|pluralize }}
+    </div>
+</div>
+
+<!-- ===== COMPACT FILTER BAR ===== -->
+<form method="get" class="filter-bar">
+    <div class="filter-group">
+        <label><i class="bi bi-shop"></i> Market</label>
         <select name="market">
             <option value="">All Markets</option>
             {% for value, label in markets %}
                 <option value="{{ value }}" {% if request.GET.market == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
         </select>
-    </label>
-    <label>Product <input type="text" name="product" value="{{ request.GET.product }}" placeholder="e.g. Cabbage"></label>
-    <button type="submit">Search</button>
-    <a href="{% url 'market_prices' %}">Clear</a>
+    </div>
+
+    <div class="filter-group">
+        <label><i class="bi bi-box-seam"></i> Product</label>
+        <input type="text" name="product" value="{{ request.GET.product }}" placeholder="e.g. Cabbage, Tomato">
+    </div>
+
+    <div class="filter-actions">
+        <button type="submit" class="btn-filter">
+            <i class="bi bi-search"></i> Search
+        </button>
+        <a href="{% url 'market_prices' %}" class="btn-clear">
+            <i class="bi bi-arrow-counterclockwise"></i> Clear
+        </a>
+    </div>
 </form>
 
-<table border="1">
-    <thead>
-        <tr><th>Product</th><th>Market</th><th>Price/kg (KES)</th><th>Date</th></tr>
-    </thead>
-    <tbody>
-        {% for price in prices %}
-        <tr>
-            <td>{{ price.product_name }}</td>
-            <td>{{ price.get_market_display }}</td>
-            <td>{{ price.price_per_kg }}</td>
-            <td>{{ price.recorded_date }}</td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="4">No price data found.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- ===== SLIM TABLE ===== -->
+<div class="table-container">
+    <table class="slim-table">
+        <thead>
+            <tr>
+                <th><i class="bi bi-tag"></i> Product</th>
+                <th><i class="bi bi-geo-alt"></i> Market</th>
+                <th><i class="bi bi-currency-dollar"></i> Price/kg</th>
+                <th><i class="bi bi-calendar3"></i> Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for price in prices %}
+            <tr>
+                <td data-label="Product">{{ price.product_name }}</td>
+                <td data-label="Market">
+                    <span class="market-badge">
+                        <i class="bi bi-shop"></i> {{ price.get_market_display }}
+                    </span>
+                </td>
+                <td data-label="Price/kg" class="price-cell">{{ price.price_per_kg|floatformat:2 }}</td>
+                <td data-label="Date">{{ price.recorded_date|date:"d M Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="padding:0;">
+                    <div class="empty-state">
+                        <i class="bi bi-bar-chart"></i>
+                        <p>No market price data found.</p>
+                        {% if request.GET.market or request.GET.product %}
+                            <p style="font-size:12px; margin-bottom:16px;">Try adjusting your filters.</p>
+                            <a href="{% url 'market_prices' %}" class="btn-primary">
+                                <i class="bi bi-funnel"></i> Clear filters
+                            </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- subtle footer (consistent with other pages) -->
+<div style="margin-top: 24px; display: flex; gap: 12px; align-items: center; font-size:12px; color:var(--text-placeholder);">
+    <i class="bi bi-shield-check" style="color:var(--green-300);"></i>
+    <span>Prices are updated daily from major Kenyan markets.</span>
+</div>
 {% endblock %}
