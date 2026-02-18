@@ -1,63 +1,835 @@
 {% extends 'base.html' %}
 {% block title %}Products{% endblock %}
 
+{% block extra_head %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   PRODUCT LIST — ecommerce style, inherits base.html tokens
+═══════════════════════════════════════════════════════════ */
+
+/* ── Page header ─────────────────────────────────────────── */
+.pl-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.pl-title h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--green-700);
+    line-height: 1.2;
+}
+.pl-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+.btn-add-product {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(62,124,35,.3);
+    transition: opacity .2s, box-shadow .2s;
+    white-space: nowrap;
+}
+.btn-add-product:hover {
+    opacity: .9;
+    box-shadow: 0 4px 16px rgba(62,124,35,.35);
+    color: #fff;
+}
+
+/* ── Breadcrumb ──────────────────────────────────────────── */
+.breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12.5px; color: var(--text-muted); margin-bottom: 20px;
+}
+.breadcrumb a { color: var(--green-500); transition: color .2s; }
+.breadcrumb a:hover { color: var(--green-700); }
+.breadcrumb i { font-size: 11px; }
+
+/* ── Main layout: filter rail + product area ─────────────── */
+.pl-layout {
+    display: flex;
+    gap: 22px;
+    align-items: flex-start;
+}
+
+/* ── Filter rail ─────────────────────────────────────────── */
+.filter-rail {
+    width: 230px;
+    flex-shrink: 0;
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    padding: 0;
+    position: sticky;
+    top: calc(var(--nav-h) + 20px);
+    overflow: hidden;
+}
+.filter-rail-head {
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.filter-rail-head span {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.filter-rail-head span i { color: var(--green-500); font-size: 15px; }
+.filter-clear {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    transition: color .18s;
+}
+.filter-clear:hover { color: var(--green-500); }
+
+.filter-section {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-light);
+}
+.filter-section:last-child { border-bottom: none; }
+.filter-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    display: block;
+}
+.filter-select {
+    width: 100%;
+    height: 36px;
+    background: var(--surface);
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    padding: 0 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b8a58' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+}
+.filter-select:focus {
+    border-color: var(--green-300);
+    box-shadow: 0 0 0 3px rgba(120,192,72,.15);
+    background-color: var(--white);
+}
+
+.filter-input {
+    width: 100%;
+    height: 34px;
+    background: var(--surface);
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    padding: 0 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+.filter-input:focus {
+    border-color: var(--green-300);
+    box-shadow: 0 0 0 3px rgba(120,192,72,.15);
+    background-color: var(--white);
+}
+.filter-input::placeholder { color: var(--text-placeholder); }
+
+.price-row { display: flex; gap: 8px; align-items: center; }
+.price-row .filter-input { flex: 1; }
+.price-sep { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--text-second);
+    padding: 4px 0;
+    user-select: none;
+}
+.filter-checkbox input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--green-500);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Search inside filter rail */
+.filter-search-wrap { position: relative; }
+.filter-search-wrap .search-icon-f {
+    position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px; color: var(--text-muted);
+    pointer-events: none;
+}
+.filter-search-wrap .filter-input { padding-left: 32px; }
+
+.btn-apply {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 9px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s, box-shadow .2s;
+    margin-top: 4px;
+}
+.btn-apply:hover { opacity: .9; box-shadow: var(--shadow-sm); }
+
+/* ── Product area ────────────────────────────────────────── */
+.product-area { flex: 1; min-width: 0; }
+
+/* Toolbar: result count + view toggle */
+.pl-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.pl-count {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.pl-count strong { color: var(--text-primary); font-weight: 600; }
+
+.view-toggle {
+    display: flex;
+    gap: 4px;
+}
+.view-btn {
+    width: 32px; height: 32px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all .18s;
+}
+.view-btn.active,
+.view-btn:hover {
+    background: var(--green-50);
+    border-color: var(--green-300);
+    color: var(--green-700);
+}
+
+/* ── Product cards grid ──────────────────────────────────── */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+/* Product card */
+.product-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow .25s var(--ease), transform .25s var(--ease), border-color .25s var(--ease);
+}
+.product-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
+    border-color: var(--green-100);
+}
+
+/* ── Product image ───────────────────────────────────────── */
+.prod-img-wrap {
+    position: relative;
+    width: 100%;
+    padding-top: 68%;   /* aspect ratio */
+    background: var(--surface);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.prod-img-wrap img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform .35s var(--ease);
+}
+.product-card:hover .prod-img-wrap img {
+    transform: scale(1.05);
+}
+
+/* No-image placeholder */
+.prod-no-img {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--green-50) 100%);
+    color: var(--text-placeholder);
+}
+.prod-no-img i { font-size: 36px; color: var(--green-100); }
+.prod-no-img span { font-size: 11px; font-weight: 600; letter-spacing: .4px; }
+
+/* Status overlay badge (top-left on image) */
+.prod-status-badge {
+    position: absolute;
+    top: 10px; left: 10px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 700;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,.4);
+    display: flex; align-items: center; gap: 4px;
+}
+.prod-status-badge.available { background: rgba(234,245,223,.9); color: var(--green-700); }
+.prod-status-badge.reserved  { background: rgba(253,240,213,.9); color: var(--amber-600); }
+.prod-status-badge.sold      { background: rgba(240,240,240,.9); color: #666; }
+.prod-status-badge.expired   { background: rgba(254,240,240,.9); color: #b83232; }
+
+/* Organic / Certified badges (top-right on image) */
+.prod-cert-badges {
+    position: absolute;
+    top: 10px; right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+}
+.cert-badge {
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,.4);
+    display: flex; align-items: center; gap: 3px;
+    white-space: nowrap;
+}
+.cert-badge.organic   { background: rgba(200,230,176,.9); color: var(--green-700); }
+.cert-badge.certified { background: rgba(253,240,213,.9); color: var(--amber-600); }
+
+/* ── Product card body ───────────────────────────────────── */
+.prod-body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 6px;
+}
+.prod-category {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--green-400);
+    display: flex; align-items: center; gap: 4px;
+}
+.prod-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+.prod-name a { color: inherit; transition: color .18s; }
+.prod-name a:hover { color: var(--green-500); }
+.prod-variety {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: -2px;
+}
+.prod-farm {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 4px;
+}
+.prod-farm i { color: var(--green-300); font-size: 12px; }
+.prod-farm a { color: var(--text-muted); transition: color .18s; }
+.prod-farm a:hover { color: var(--green-500); }
+
+.prod-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+.prod-meta-chip {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11.5px; color: var(--text-muted);
+}
+.prod-meta-chip i { font-size: 12px; color: var(--green-300); }
+
+/* Price + CTA row */
+.prod-footer {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.prod-price {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+.prod-price .price-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--green-700);
+}
+.prod-price .price-unit {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.prod-cta {
+    display: flex;
+    gap: 6px;
+}
+.btn-view {
+    width: 32px; height: 32px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    color: var(--text-second);
+    transition: all .18s;
+    flex-shrink: 0;
+}
+.btn-view:hover { border-color: var(--green-300); color: var(--green-700); background: var(--green-50); }
+.btn-order {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 13px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    transition: opacity .18s, box-shadow .18s;
+    white-space: nowrap;
+}
+.btn-order:hover { opacity: .9; box-shadow: 0 3px 12px rgba(62,124,35,.3); color: #fff; }
+.btn-order.disabled {
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: default;
+    box-shadow: none;
+    opacity: 1;
+    border: 1.5px solid var(--border);
+}
+
+/* ── List view ───────────────────────────────────────────── */
+.product-grid.list-view {
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+.product-grid.list-view .product-card {
+    flex-direction: row;
+}
+.product-grid.list-view .prod-img-wrap {
+    width: 130px;
+    min-width: 130px;
+    padding-top: 0;
+    height: 130px;
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+.product-grid.list-view .prod-body {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 18px;
+}
+.product-grid.list-view .prod-main { flex: 1; min-width: 160px; }
+.product-grid.list-view .prod-footer { padding-top: 0; border-top: none; margin-top: 0; flex-shrink: 0; }
+
+/* ── Empty state ─────────────────────────────────────────── */
+.empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px;
+    padding: 60px 24px; text-align: center;
+    background: var(--white); border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);
+}
+.empty-icon {
+    width: 64px; height: 64px;
+    background: var(--surface); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: var(--text-muted);
+}
+.empty-state h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--text-primary); }
+.empty-state p { font-size: 13.5px; color: var(--text-muted); max-width: 300px; line-height: 1.6; }
+.empty-state a {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px;
+    background: var(--green-500); color: #fff;
+    border-radius: 9px; font-size: 13px; font-weight: 600;
+    transition: background .2s; margin-top: 4px;
+}
+.empty-state a:hover { background: var(--green-700); color: #fff; }
+
+/* ── Active filter chips ─────────────────────────────────── */
+.active-filters {
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap; margin-bottom: 14px;
+}
+.filter-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px;
+    background: var(--green-50); border: 1.5px solid var(--green-100);
+    border-radius: 20px;
+    font-size: 12px; font-weight: 600; color: var(--green-700);
+}
+.filter-chip a { color: var(--text-muted); margin-left: 3px; font-size: 13px; line-height: 1; transition: color .18s; }
+.filter-chip a:hover { color: #b83232; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .pl-layout { flex-direction: column; }
+    .filter-rail { width: 100%; position: static; }
+    .filter-section-inline { display: flex; flex-wrap: wrap; gap: 12px; }
+    .filter-section-inline .filter-section { border: none; padding: 0; flex: 1; min-width: 140px; }
+    .product-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+@media (max-width: 600px) {
+    .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .pl-header { flex-direction: column; align-items: flex-start; }
+    .product-grid.list-view .prod-img-wrap { width: 90px; min-width: 90px; height: 90px; }
+}
+@media (max-width: 380px) {
+    .product-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <i class="bi bi-house-door-fill"></i>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>Products</span>
+</nav>
+{% endblock %}
+
 {% block content %}
-<h1>🥦 Available Produce</h1>
 
-<form method="get">
-    <label>Category
-        <select name="category">
-            <option value="">All Categories</option>
-            {% for cat in categories %}
-                <option value="{{ cat.pk }}" {% if request.GET.category == cat.pk|stringformat:"s" %}selected{% endif %}>
-                    {{ cat.icon }} {{ cat.name }}
-                </option>
-            {% endfor %}
-        </select>
-    </label>
-    <label><input type="checkbox" name="organic" {% if request.GET.organic %}checked{% endif %}> Organic Only</label>
-    <label>Min Price <input type="number" name="min_price" value="{{ request.GET.min_price }}" step="1"></label>
-    <label>Max Price <input type="number" name="max_price" value="{{ request.GET.max_price }}" step="1"></label>
-    <label>Search <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Product, farm, location..."></label>
-    <button type="submit">Search</button>
-    <a href="{% url 'product_list' %}">Clear</a>
-</form>
+<!-- ── Page header ──────────────────────────────────────── -->
+<div class="pl-header">
+    <div class="pl-title">
+        <h1>Available Produce</h1>
+        <p>Fresh from farms across Kenya — order directly from the source</p>
+    </div>
+    {% if user.role == 'farmer' %}
+    <a href="{% url 'product_create' %}" class="btn-add-product">
+        <i class="bi bi-plus-lg"></i> List New Product
+    </a>
+    {% endif %}
+</div>
 
-{% if user.role == 'farmer' %}
-    <a href="{% url 'product_create' %}">+ List New Product</a>
+<!-- ── Active filter chips ──────────────────────────────── -->
+{% if request.GET.q or request.GET.category or request.GET.organic or request.GET.min_price or request.GET.max_price %}
+<div class="active-filters">
+    <span style="font-size:12px;color:var(--text-muted);font-weight:600;">Filters:</span>
+    {% if request.GET.q %}
+    <span class="filter-chip"><i class="bi bi-search"></i>{{ request.GET.q }}<a href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.organic %}organic=on&{% endif %}{% if request.GET.min_price %}min_price={{ request.GET.min_price }}&{% endif %}{% if request.GET.max_price %}max_price={{ request.GET.max_price }}{% endif %}" title="Remove">&times;</a></span>
+    {% endif %}
+    {% if request.GET.organic %}
+    <span class="filter-chip"><i class="bi bi-leaf"></i> Organic<a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.min_price %}min_price={{ request.GET.min_price }}&{% endif %}{% if request.GET.max_price %}max_price={{ request.GET.max_price }}{% endif %}" title="Remove">&times;</a></span>
+    {% endif %}
+    <a href="{% url 'product_list' %}" style="font-size:12px;color:var(--text-muted);margin-left:4px;display:inline-flex;align-items:center;gap:4px;transition:color .18s;" onmouseover="this.style.color='#b83232'" onmouseout="this.style.color=''"><i class="bi bi-x-circle"></i> Clear all</a>
+</div>
 {% endif %}
 
-<table border="1">
-    <thead>
-        <tr>
-            <th>Product</th><th>Farm</th><th>Location</th><th>Category</th>
-            <th>Qty</th><th>Unit</th><th>Price (KES)</th>
-            <th>Organic</th><th>Certified</th><th>Harvest Date</th><th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for product in products %}
-        <tr>
-            <td><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></td>
-            <td><a href="{% url 'farm_detail' product.farm.pk %}">{{ product.farm.name }}</a></td>
-            <td>{{ product.farm.location_name }}</td>
-            <td>{{ product.category.icon }} {{ product.category.name }}</td>
-            <td>{{ product.quantity_available }}</td>
-            <td>{{ product.unit }}</td>
-            <td>{{ product.price_per_unit }}</td>
-            <td>{{ product.is_organic|yesno:"✅,—" }}</td>
-            <td>{{ product.is_certified|yesno:"✅,—" }}</td>
-            <td>{{ product.harvest_date }}</td>
-            <td>
-                <a href="{% url 'product_detail' product.pk %}">View</a>
-                {% if user.role == 'buyer' %}
-                    | <a href="{% url 'order_create' product.pk %}">Order</a>
+<!-- ── Layout ────────────────────────────────────────────── -->
+<div class="pl-layout">
+
+    <!-- ═════════ FILTER RAIL ════════════════════════════════ -->
+    <aside class="filter-rail" aria-label="Filter products">
+        <form method="get" id="filterForm">
+            <div class="filter-rail-head">
+                <span><i class="bi bi-funnel"></i> Filters</span>
+                <a href="{% url 'product_list' %}" class="filter-clear">Clear all</a>
+            </div>
+
+            <!-- Search -->
+            <div class="filter-section">
+                <label class="filter-label" for="q">Search</label>
+                <div class="filter-search-wrap">
+                    <i class="bi bi-search search-icon-f"></i>
+                    <input class="filter-input" type="text" id="q" name="q"
+                           value="{{ request.GET.q }}" placeholder="Product, farm, location…">
+                </div>
+            </div>
+
+            <!-- Category -->
+            <div class="filter-section">
+                <label class="filter-label" for="category">Category</label>
+                <select class="filter-select" id="category" name="category">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.pk }}"
+                        {% if request.GET.category == cat.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.icon }} {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Price range -->
+            <div class="filter-section">
+                <label class="filter-label">Price Range (KES)</label>
+                <div class="price-row">
+                    <input class="filter-input" type="number" name="min_price"
+                           value="{{ request.GET.min_price }}" placeholder="Min" step="1" min="0">
+                    <span class="price-sep">—</span>
+                    <input class="filter-input" type="number" name="max_price"
+                           value="{{ request.GET.max_price }}" placeholder="Max" step="1" min="0">
+                </div>
+            </div>
+
+            <!-- Checkboxes -->
+            <div class="filter-section">
+                <label class="filter-label">Attributes</label>
+                <label class="filter-checkbox">
+                    <input type="checkbox" name="organic"
+                           {% if request.GET.organic %}checked{% endif %}>
+                    <i class="bi bi-leaf" style="color:var(--green-400);"></i> Organic Only
+                </label>
+                <label class="filter-checkbox" style="margin-top:6px;">
+                    <input type="checkbox" name="certified"
+                           {% if request.GET.certified %}checked{% endif %}>
+                    <i class="bi bi-patch-check" style="color:var(--amber-400);"></i> Certified Only
+                </label>
+            </div>
+
+            <!-- Apply -->
+            <div class="filter-section">
+                <button type="submit" class="btn-apply">
+                    <i class="bi bi-search"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </aside>
+
+    <!-- ═════════ PRODUCT AREA ══════════════════════════════ -->
+    <div class="product-area">
+
+        <!-- Toolbar -->
+        <div class="pl-toolbar">
+            <div class="pl-count">
+                Showing <strong>{{ products|length }}</strong> product{{ products|length|pluralize }}
+                {% if request.GET.q %}for &ldquo;<strong>{{ request.GET.q }}</strong>&rdquo;{% endif %}
+            </div>
+            <div class="view-toggle" role="group" aria-label="View mode">
+                <button class="view-btn active" id="gridViewBtn" title="Grid view" onclick="setView('grid')">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                </button>
+                <button class="view-btn" id="listViewBtn" title="List view" onclick="setView('list')">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Product grid -->
+        {% if products %}
+        <div class="product-grid" id="productGrid">
+            {% for product in products %}
+            <article class="product-card" aria-label="{{ product.name }}">
+
+                <!-- Image -->
+                <div class="prod-img-wrap">
+                    {% if product.photo %}
+                    <img src="{{ product.photo.url }}" alt="{{ product.name }}" loading="lazy">
+                    {% else %}
+                    <div class="prod-no-img">
+                        <i class="bi bi-image"></i>
+                        <span>No Image</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Status badge -->
+                    <span class="prod-status-badge {{ product.status }}">
+                        {% if product.status == 'available' %}<i class="bi bi-circle-fill" style="font-size:7px;"></i> Available
+                        {% elif product.status == 'reserved' %}<i class="bi bi-lock-fill" style="font-size:9px;"></i> Reserved
+                        {% elif product.status == 'sold' %}<i class="bi bi-check-circle-fill" style="font-size:9px;"></i> Sold Out
+                        {% else %}<i class="bi bi-x-circle-fill" style="font-size:9px;"></i> Expired
+                        {% endif %}
+                    </span>
+
+                    <!-- Cert badges -->
+                    {% if product.is_organic or product.is_certified %}
+                    <div class="prod-cert-badges">
+                        {% if product.is_organic %}<span class="cert-badge organic"><i class="bi bi-leaf"></i> Organic</span>{% endif %}
+                        {% if product.is_certified %}<span class="cert-badge certified"><i class="bi bi-patch-check"></i> Certified</span>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Body -->
+                <div class="prod-body">
+                    <div class="prod-main">
+                        {% if product.category %}
+                        <div class="prod-category">{{ product.category.icon }} {{ product.category.name }}</div>
+                        {% endif %}
+
+                        <div class="prod-name">
+                            <a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a>
+                        </div>
+
+                        {% if product.variety %}
+                        <div class="prod-variety">{{ product.variety }}</div>
+                        {% endif %}
+
+                        <div class="prod-farm">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <a href="{% url 'farm_detail' product.farm.pk %}">{{ product.farm.name }}</a>
+                            &middot; {{ product.farm.location_name }}
+                        </div>
+
+                        <div class="prod-meta-row">
+                            <span class="prod-meta-chip">
+                                <i class="bi bi-box-seam"></i>
+                                {{ product.quantity_available }} {{ product.get_unit_display }}
+                            </span>
+                            <span class="prod-meta-chip">
+                                <i class="bi bi-calendar3"></i>
+                                {{ product.harvest_date|date:"d M Y" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Price + CTA -->
+                    <div class="prod-footer">
+                        <div class="prod-price">
+                            <span class="price-amount">{{ product.price_per_unit|floatformat:0 }}</span>
+                            <span class="price-unit">KES / {{ product.get_unit_display }}</span>
+                        </div>
+                        <div class="prod-cta">
+                            <a href="{% url 'product_detail' product.pk %}" class="btn-view" title="View details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if user.role == 'buyer' %}
+                                {% if product.status == 'available' %}
+                                <a href="{% url 'order_create' product.pk %}" class="btn-order">
+                                    <i class="bi bi-cart-plus"></i> Order
+                                </a>
+                                {% else %}
+                                <span class="btn-order disabled">
+                                    <i class="bi bi-slash-circle"></i> Unavailable
+                                </span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </article>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- Empty state -->
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-box-seam"></i></div>
+            <h3>No products found</h3>
+            <p>
+                {% if request.GET.q or request.GET.category or request.GET.organic %}
+                    Try adjusting your filters or search terms.
+                {% else %}
+                    No produce is listed yet. Check back soon!
                 {% endif %}
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="11">No products found.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+            </p>
+            {% if request.GET.q or request.GET.category or request.GET.organic %}
+            <a href="{% url 'product_list' %}"><i class="bi bi-arrow-left"></i> Clear Filters</a>
+            {% elif user.role == 'farmer' %}
+            <a href="{% url 'product_create' %}"><i class="bi bi-plus-lg"></i> List Your First Product</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div><!-- /product-area -->
+</div><!-- /pl-layout -->
+
+<script>
+(function(){
+    'use strict';
+    const grid       = document.getElementById('productGrid');
+    const gridBtn    = document.getElementById('gridViewBtn');
+    const listBtn    = document.getElementById('listViewBtn');
+    const STORE_KEY  = 'agrilogix_product_view';
+
+    function setView(mode) {
+        if (!grid) return;
+        if (mode === 'list') {
+            grid.classList.add('list-view');
+            listBtn.classList.add('active');
+            gridBtn.classList.remove('active');
+        } else {
+            grid.classList.remove('list-view');
+            gridBtn.classList.add('active');
+            listBtn.classList.remove('active');
+        }
+        localStorage.setItem(STORE_KEY, mode);
+    }
+    window.setView = setView;  /* expose to onclick */
+
+    /* Restore saved view */
+    const saved = localStorage.getItem(STORE_KEY);
+    if (saved === 'list') setView('list');
+
+    /* Auto-submit filter form on select/checkbox change */
+    document.querySelectorAll('#filterForm select, #filterForm input[type="checkbox"]')
+        .forEach(el => el.addEventListener('change', () => document.getElementById('filterForm').submit()));
+})();
+</script>
 {% endblock %}

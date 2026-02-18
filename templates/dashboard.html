@@ -1,32 +1,486 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard{% endblock %}
 
+{% block extra_head %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD — inherits base.html tokens & fonts
+═══════════════════════════════════════════════════════════ */
+
+/* ── Page header ─────────────────────────────────────────── */
+.dash-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+.dash-welcome h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--green-700);
+    line-height: 1.2;
+}
+.dash-welcome p {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+.role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-50);
+    border: 1.5px solid var(--green-100);
+    color: var(--green-700);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 40px;
+    margin-top: 6px;
+}
+.role-pill i { font-size: 13px; color: var(--green-400); }
+
+/* ── Breadcrumb ──────────────────────────────────────────── */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+.breadcrumb a { color: var(--green-500); transition: color .2s; }
+.breadcrumb a:hover { color: var(--green-700); }
+.breadcrumb i { font-size: 11px; }
+
+/* ── Stat cards grid ─────────────────────────────────────── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+.stat-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: var(--shadow-xs);
+    transition: box-shadow .25s var(--ease), transform .25s var(--ease), border-color .25s var(--ease);
+    position: relative;
+    overflow: hidden;
+}
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--green-500), var(--green-300));
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+.stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--green-100);
+}
+.stat-card.amber::before { background: linear-gradient(90deg, var(--amber-600), var(--amber-400)); }
+.stat-card.amber .stat-icon { background: var(--amber-100); color: var(--amber-600); }
+.stat-icon {
+    width: 36px; height: 36px;
+    background: var(--green-50);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    color: var(--green-500);
+}
+.stat-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+.stat-value small {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 2px;
+}
+
+/* ── Section card ────────────────────────────────────────── */
+.section-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+}
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.section-head-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.section-icon {
+    width: 34px; height: 34px;
+    background: var(--green-50);
+    border: 1.5px solid var(--green-100);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    color: var(--green-500);
+    flex-shrink: 0;
+}
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.section-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+.section-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--green-500);
+    padding: 6px 12px;
+    border: 1.5px solid var(--green-100);
+    border-radius: 8px;
+    background: var(--green-50);
+    transition: background .2s, border-color .2s, color .2s;
+    white-space: nowrap;
+}
+.section-action:hover {
+    background: var(--green-500);
+    border-color: var(--green-500);
+    color: #fff;
+}
+.section-body { padding: 0; }
+
+/* ── Data table ──────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+.data-table thead th {
+    padding: 11px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+.data-table thead th:first-child { padding-left: 22px; }
+.data-table thead th:last-child { padding-right: 22px; }
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background .18s;
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--surface); }
+.data-table td {
+    padding: 11px 16px;
+    color: var(--text-second);
+    vertical-align: middle;
+}
+.data-table td:first-child { padding-left: 22px; font-weight: 500; color: var(--text-primary); }
+.data-table td:last-child { padding-right: 22px; }
+.data-table a { color: var(--green-500); font-weight: 600; transition: color .18s; }
+.data-table a:hover { color: var(--green-700); }
+
+/* ── Table overflow wrapper ──────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+
+/* ── Status badges ───────────────────────────────────────── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.badge-green  { background: #eaf7ea; color: #1d6b1d; }
+.badge-amber  { background: var(--amber-100); color: var(--amber-600); }
+.badge-blue   { background: #e8f3ff; color: #1a5aaa; }
+.badge-red    { background: #fef0f0; color: #b83232; }
+.badge-gray   { background: var(--surface); color: var(--text-muted); }
+.badge i { font-size: 10px; }
+
+/* ── Action buttons (table) ──────────────────────────────── */
+.tbl-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.btn-tbl {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px;
+    font-size: 12px; font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    color: var(--text-second);
+    background: var(--white);
+    transition: all .18s var(--ease);
+    white-space: nowrap;
+}
+.btn-tbl:hover { border-color: var(--green-300); color: var(--green-700); background: var(--green-50); }
+.btn-tbl.primary { border-color: var(--green-400); color: var(--green-700); background: var(--green-50); }
+.btn-tbl.primary:hover { background: var(--green-500); color: #fff; border-color: var(--green-500); }
+.btn-tbl i { font-size: 12px; }
+
+/* ── Empty state ─────────────────────────────────────────── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 44px 24px;
+    text-align: center;
+}
+.empty-icon {
+    width: 60px; height: 60px;
+    background: var(--surface);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    color: var(--text-muted);
+}
+.empty-state p { font-size: 13.5px; color: var(--text-muted); max-width: 280px; line-height: 1.6; }
+.empty-state a {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px;
+    background: var(--green-500);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    transition: background .2s, box-shadow .2s;
+    margin-top: 4px;
+}
+.empty-state a:hover { background: var(--green-700); box-shadow: var(--shadow-sm); }
+
+/* ── Notifications list ──────────────────────────────────── */
+.notif-list { padding: 6px 0; }
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 22px;
+    border-bottom: 1px solid var(--border-light);
+    transition: background .18s;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--surface); }
+.notif-dot {
+    width: 8px; height: 8px;
+    background: var(--green-400);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+.notif-body { flex: 1; min-width: 0; }
+.notif-title { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+.notif-msg { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-time { font-size: 11px; color: var(--text-placeholder); white-space: nowrap; flex-shrink: 0; }
+
+/* ── Alert row (critical) ────────────────────────────────── */
+.alert-row td:first-child { padding-left: 22px; }
+.temp-critical { color: #b83232; font-weight: 700; }
+.temp-normal { color: #1d6b1d; }
+
+/* ── Facility card ───────────────────────────────────────── */
+.facility-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    padding: 20px 22px;
+}
+.facility-card {
+    background: var(--off-white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    transition: box-shadow .2s, border-color .2s;
+}
+.facility-card:hover { box-shadow: var(--shadow-sm); border-color: var(--green-100); }
+.facility-name { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.facility-name a { color: inherit; transition: color .18s; }
+.facility-name a:hover { color: var(--green-500); }
+.facility-meta { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; display: flex; flex-direction: column; gap: 3px; }
+.facility-meta span { display: flex; align-items: center; gap: 6px; }
+.facility-meta i { color: var(--green-400); font-size: 13px; }
+/* Capacity bar */
+.cap-bar-wrap { margin-top: 10px; }
+.cap-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+.cap-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.cap-fill { height: 100%; background: linear-gradient(90deg, var(--green-500), var(--green-300)); border-radius: 3px; transition: width .4s var(--ease); }
+.cap-fill.high { background: linear-gradient(90deg, var(--amber-600), var(--amber-400)); }
+
+/* ── Vehicle item ────────────────────────────────────────── */
+.vehicle-list { padding: 12px 22px; display: flex; flex-direction: column; gap: 10px; }
+.vehicle-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    background: var(--off-white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color .2s, box-shadow .2s;
+}
+.vehicle-item:hover { border-color: var(--green-100); box-shadow: var(--shadow-xs); }
+.vehicle-icon {
+    width: 36px; height: 36px;
+    background: var(--surface);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; color: var(--green-500); flex-shrink: 0;
+}
+.vehicle-info { flex: 1; min-width: 0; }
+.vehicle-plate { font-weight: 700; font-size: 14px; color: var(--text-primary); }
+.vehicle-type { font-size: 12px; color: var(--text-muted); }
+
+/* ── Metrics table highlight ─────────────────────────────── */
+.data-table td.metric-highlight {
+    font-weight: 600;
+    color: var(--green-700);
+}
+
+/* ── CTA link strip ──────────────────────────────────────── */
+.cta-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px;
+    border-top: 1px solid var(--border-light);
+    background: var(--surface);
+    flex-wrap: wrap;
+}
+.cta-strip a {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12.5px; font-weight: 600;
+    color: var(--green-500);
+    transition: color .18s;
+}
+.cta-strip a:hover { color: var(--green-700); }
+.cta-divider { color: var(--border); font-size: 12px; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .dash-welcome h1 { font-size: 21px; }
+    .stat-value { font-size: 22px; }
+    .data-table thead th,
+    .data-table td { padding: 9px 10px; }
+    .data-table td:first-child { padding-left: 14px; }
+    .data-table thead th:first-child { padding-left: 14px; }
+    .section-head { padding: 13px 16px; }
+    .facility-grid { grid-template-columns: 1fr; padding: 14px 16px; }
+}
+@media (max-width: 400px) {
+    .stats-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
 {% block breadcrumb %}
-<nav>
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <i class="bi bi-house-door-fill"></i>
     <a href="{% url 'dashboard' %}">Home</a>
 </nav>
 {% endblock %}
 
 {% block content %}
-<h1>Welcome, {{ user.get_full_name|default:user.username }} 👋</h1>
-<p>Role: {{ user.get_role_display }}</p>
 
-<!-- ========== FARMER DASHBOARD ========== -->
+<!-- ── Page header ──────────────────────────────────────── -->
+<div class="dash-header">
+    <div class="dash-welcome">
+        <h1>Good day, {{ user.get_full_name|default:user.username }} 👋</h1>
+        <p>Here's what's happening on your AgriLogix account today.</p>
+        <span class="role-pill">
+            {% if user.role == 'farmer' %}<i class="bi bi-tree"></i> Farmer
+            {% elif user.role == 'buyer' %}<i class="bi bi-bag-check"></i> Buyer
+            {% elif user.role == 'driver' %}<i class="bi bi-truck"></i> Driver
+            {% elif user.role == 'cold_storage' %}<i class="bi bi-thermometer-snow"></i> Cold Storage
+            {% elif user.role == 'admin' %}<i class="bi bi-shield-check"></i> Admin
+            {% else %}<i class="bi bi-person-badge"></i> {{ user.get_role_display }}{% endif %}
+        </span>
+    </div>
+</div>
+
+
+{# ══════════════════════════════════════════════════════════ #}
+{#                     FARMER DASHBOARD                       #}
+{# ══════════════════════════════════════════════════════════ #}
 {% if user.role == 'farmer' %}
 
-    <section>
-        <h2>📊 My Stats</h2>
-        <ul>
-            <li>Available Products: <strong>{{ total_products }}</strong></li>
-            <li>Pending Orders: <strong>{{ pending_orders }}</strong></li>
-            <li>Total Earnings: <strong>KES {{ total_earnings|floatformat:0 }}</strong></li>
-        </ul>
-    </section>
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+        <div class="stat-label">Available Products</div>
+        <div class="stat-value">{{ total_products }}</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
+        <div class="stat-label">Pending Orders</div>
+        <div class="stat-value">{{ pending_orders }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-currency-exchange"></i></div>
+        <div class="stat-label">Total Earnings</div>
+        <div class="stat-value">{{ total_earnings|floatformat:0 }}<small>KES</small></div>
+    </div>
+</div>
 
-    <section>
-        <h2>🌾 My Farms</h2>
+<!-- My Farms -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-tree"></i></div>
+            <div>
+                <div class="section-title">My Farms</div>
+                <div class="section-subtitle">All registered farming locations</div>
+            </div>
+        </div>
+        <a href="{% url 'farm_create' %}" class="section-action"><i class="bi bi-plus-lg"></i> Add Farm</a>
+    </div>
+    <div class="section-body">
         {% if farms %}
-            <table border="1">
+        <div class="table-wrap">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Farm</th><th>Type</th><th>Location</th><th>Size (Acres)</th><th>Actions</th>
@@ -37,29 +491,47 @@
                     <tr>
                         <td><a href="{% url 'farm_detail' farm.pk %}">{{ farm.name }}</a></td>
                         <td>{{ farm.get_farm_type_display }}</td>
-                        <td>{{ farm.location_name }}</td>
+                        <td><i class="bi bi-geo-alt" style="color:var(--green-400);margin-right:4px;"></i>{{ farm.location_name }}</td>
                         <td>{{ farm.size_acres }}</td>
                         <td>
-                            <a href="{% url 'farm_edit' farm.pk %}">Edit</a> |
-                            <a href="{% url 'farm_detail' farm.pk %}">View</a>
+                            <div class="tbl-actions">
+                                <a href="{% url 'farm_detail' farm.pk %}" class="btn-tbl primary"><i class="bi bi-eye"></i> View</a>
+                                <a href="{% url 'farm_edit' farm.pk %}" class="btn-tbl"><i class="bi bi-pencil"></i> Edit</a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
         {% else %}
-            <p>No farms registered yet. <a href="{% url 'farm_create' %}">Register your first farm →</a></p>
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-tree"></i></div>
+            <p>No farms registered yet. Start by adding your first farm.</p>
+            <a href="{% url 'farm_create' %}"><i class="bi bi-plus-lg"></i> Register Your First Farm</a>
+        </div>
         {% endif %}
-        <a href="{% url 'farm_create' %}">+ Add New Farm</a>
-    </section>
+    </div>
+</div>
 
-    <section>
-        <h2>📅 Upcoming Harvests</h2>
+<!-- Upcoming Harvests -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-calendar3"></i></div>
+            <div>
+                <div class="section-title">Upcoming Harvests</div>
+                <div class="section-subtitle">Scheduled harvest and pickup dates</div>
+            </div>
+        </div>
+    </div>
+    <div class="section-body">
         {% if harvest_schedules %}
-            <table border="1">
+        <div class="table-wrap">
+            <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Product</th><th>Farm</th><th>Harvest Date</th><th>Ready For Pickup</th><th>Qty (kg)</th><th>Status</th>
+                        <th>Product</th><th>Farm</th><th>Harvest Date</th><th>Ready for Pickup</th><th>Qty (kg)</th><th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,277 +542,563 @@
                         <td>{{ h.harvest_date }}</td>
                         <td>{{ h.ready_for_pickup_date }}</td>
                         <td>{{ h.expected_quantity_kg }}</td>
-                        <td>{{ h.get_status_display }}</td>
+                        <td>
+                            <span class="badge badge-green"><i class="bi bi-circle-fill"></i>{{ h.get_status_display }}</span>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
         {% else %}
-            <p>No upcoming harvests.</p>
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
+            <p>No upcoming harvests scheduled.</p>
+        </div>
         {% endif %}
-    </section>
+    </div>
+</div>
 
-    <section>
-        <h2>📦 Recent Orders</h2>
+<!-- Recent Orders (farmer) -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-bag-check"></i></div>
+            <div>
+                <div class="section-title">Recent Orders</div>
+                <div class="section-subtitle">Latest purchase activity</div>
+            </div>
+        </div>
+        <a href="{% url 'order_list' %}" class="section-action"><i class="bi bi-arrow-right"></i> All Orders</a>
+    </div>
+    <div class="section-body">
         {% if recent_orders %}
-            <table border="1">
+        <div class="table-wrap">
+            <table class="data-table">
                 <thead>
-                    <tr>
-                        <th>Order #</th><th>Buyer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th>
-                    </tr>
+                    <tr><th>Order #</th><th>Buyer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                     {% for order in recent_orders %}
                     <tr>
                         <td><a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a></td>
                         <td>{{ order.buyer.get_full_name }}</td>
-                        <td>KES {{ order.total_amount|floatformat:0 }}</td>
-                        <td>{{ order.get_status_display }}</td>
+                        <td><strong>KES {{ order.total_amount|floatformat:0 }}</strong></td>
+                        <td>
+                            {% if order.status == 'completed' %}<span class="badge badge-green"><i class="bi bi-check-circle"></i>{{ order.get_status_display }}</span>
+                            {% elif order.status == 'pending' %}<span class="badge badge-amber"><i class="bi bi-clock"></i>{{ order.get_status_display }}</span>
+                            {% elif order.status == 'cancelled' %}<span class="badge badge-red"><i class="bi bi-x-circle"></i>{{ order.get_status_display }}</span>
+                            {% else %}<span class="badge badge-blue">{{ order.get_status_display }}</span>{% endif %}
+                        </td>
                         <td>{{ order.created_at|date:"d M Y" }}</td>
-                        <td><a href="{% url 'order_detail' order.pk %}">View</a></td>
+                        <td><a href="{% url 'order_detail' order.pk %}" class="btn-tbl primary"><i class="bi bi-eye"></i> View</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
         {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-bag-x"></i></div>
             <p>No orders yet.</p>
+        </div>
         {% endif %}
-    </section>
+    </div>
+</div>
 
-<!-- ========== BUYER DASHBOARD ========== -->
+
+{# ══════════════════════════════════════════════════════════ #}
+{#                      BUYER DASHBOARD                       #}
+{# ══════════════════════════════════════════════════════════ #}
 {% elif user.role == 'buyer' %}
 
-    <section>
-        <h2>📊 My Stats</h2>
-        <ul>
-            <li>Active Orders: <strong>{{ active_orders }}</strong></li>
-            <li>Completed Orders: <strong>{{ completed_orders }}</strong></li>
-            <li>Total Spent: <strong>KES {{ total_spent|floatformat:0 }}</strong></li>
-        </ul>
-        <a href="{% url 'product_list' %}">Browse Available Produce →</a>
-    </section>
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-bag-check"></i></div>
+        <div class="stat-label">Active Orders</div>
+        <div class="stat-value">{{ active_orders }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-check2-circle"></i></div>
+        <div class="stat-label">Completed Orders</div>
+        <div class="stat-value">{{ completed_orders }}</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-icon"><i class="bi bi-currency-exchange"></i></div>
+        <div class="stat-label">Total Spent</div>
+        <div class="stat-value">{{ total_spent|floatformat:0 }}<small>KES</small></div>
+    </div>
+</div>
 
-    <section>
-        <h2>🥦 Featured Products</h2>
+<!-- Featured Products -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-stars"></i></div>
+            <div>
+                <div class="section-title">Featured Produce</div>
+                <div class="section-subtitle">Fresh from the farm, ready to order</div>
+            </div>
+        </div>
+        <a href="{% url 'product_list' %}" class="section-action"><i class="bi bi-grid"></i> Browse All</a>
+    </div>
+    <div class="section-body">
         {% if featured_products %}
-            <table border="1">
+        <div class="table-wrap">
+            <table class="data-table">
                 <thead>
-                    <tr>
-                        <th>Product</th><th>Farm</th><th>Price/Unit</th><th>Unit</th><th>Qty Available</th><th>Actions</th>
-                    </tr>
+                    <tr><th>Product</th><th>Farm</th><th>Price / Unit</th><th>Unit</th><th>Available Qty</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                     {% for product in featured_products %}
                     <tr>
                         <td><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></td>
                         <td>{{ product.farm.name }}</td>
-                        <td>KES {{ product.price_per_unit }}</td>
+                        <td><strong>KES {{ product.price_per_unit }}</strong></td>
                         <td>{{ product.unit }}</td>
                         <td>{{ product.quantity_available }}</td>
                         <td>
-                            <a href="{% url 'product_detail' product.pk %}">View</a> |
-                            <a href="{% url 'order_create' product.pk %}">Order</a>
+                            <div class="tbl-actions">
+                                <a href="{% url 'product_detail' product.pk %}" class="btn-tbl"><i class="bi bi-eye"></i> View</a>
+                                <a href="{% url 'order_create' product.pk %}" class="btn-tbl primary"><i class="bi bi-cart-plus"></i> Order</a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-box-seam"></i></div>
+            <p>No featured products available right now.</p>
+            <a href="{% url 'product_list' %}"><i class="bi bi-grid"></i> Browse All Products</a>
+        </div>
         {% endif %}
-    </section>
+    </div>
+</div>
 
-    <section>
-        <h2>📦 Recent Orders</h2>
+<!-- Recent Orders (buyer) -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-receipt"></i></div>
+            <div>
+                <div class="section-title">My Orders</div>
+                <div class="section-subtitle">Track your recent purchases</div>
+            </div>
+        </div>
+        <a href="{% url 'order_list' %}" class="section-action"><i class="bi bi-arrow-right"></i> All Orders</a>
+    </div>
+    <div class="section-body">
         {% if recent_orders %}
-            <table border="1">
+        <div class="table-wrap">
+            <table class="data-table">
                 <thead>
-                    <tr>
-                        <th>Order #</th><th>Farmer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th>
-                    </tr>
+                    <tr><th>Order #</th><th>Farmer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                     {% for order in recent_orders %}
                     <tr>
-                        <td>{{ order.order_number }}</td>
+                        <td><strong>{{ order.order_number }}</strong></td>
                         <td>{{ order.farmer.get_full_name }}</td>
-                        <td>KES {{ order.total_amount|floatformat:0 }}</td>
-                        <td>{{ order.get_status_display }}</td>
+                        <td><strong>KES {{ order.total_amount|floatformat:0 }}</strong></td>
+                        <td>
+                            {% if order.status == 'completed' %}<span class="badge badge-green"><i class="bi bi-check-circle"></i>{{ order.get_status_display }}</span>
+                            {% elif order.status == 'pending' %}<span class="badge badge-amber"><i class="bi bi-clock"></i>{{ order.get_status_display }}</span>
+                            {% elif order.status == 'cancelled' %}<span class="badge badge-red"><i class="bi bi-x-circle"></i>{{ order.get_status_display }}</span>
+                            {% else %}<span class="badge badge-blue">{{ order.get_status_display }}</span>{% endif %}
+                        </td>
                         <td>{{ order.created_at|date:"d M Y" }}</td>
-                        <td><a href="{% url 'order_detail' order.pk %}">View</a></td>
+                        <td><a href="{% url 'order_detail' order.pk %}" class="btn-tbl primary"><i class="bi bi-eye"></i> View</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-bag-x"></i></div>
+            <p>No orders placed yet. Start by browsing available produce.</p>
+            <a href="{% url 'product_list' %}"><i class="bi bi-grid"></i> Browse Products</a>
+        </div>
         {% endif %}
-    </section>
+    </div>
+</div>
 
-<!-- ========== DRIVER DASHBOARD ========== -->
+
+{# ══════════════════════════════════════════════════════════ #}
+{#                     DRIVER DASHBOARD                       #}
+{# ══════════════════════════════════════════════════════════ #}
 {% elif user.role == 'driver' %}
 
-    <section>
-        <h2>📊 My Stats</h2>
-        <ul>
-            <li>Completed Shipments: <strong>{{ completed_shipments }}</strong></li>
-            <li>Total Earnings: <strong>KES {{ total_earnings|floatformat:0 }}</strong></li>
-        </ul>
-    </section>
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-truck"></i></div>
+        <div class="stat-label">Completed Shipments</div>
+        <div class="stat-value">{{ completed_shipments }}</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-icon"><i class="bi bi-currency-exchange"></i></div>
+        <div class="stat-label">Total Earnings</div>
+        <div class="stat-value">{{ total_earnings|floatformat:0 }}<small>KES</small></div>
+    </div>
+</div>
 
-    <section>
-        <h2>🚛 Active Shipments</h2>
+<!-- Active Shipments -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-truck"></i></div>
+            <div>
+                <div class="section-title">Active Shipments</div>
+                <div class="section-subtitle">Current deliveries in progress</div>
+            </div>
+        </div>
+        <a href="{% url 'shipment_list' %}" class="section-action"><i class="bi bi-arrow-right"></i> All Shipments</a>
+    </div>
+    <div class="section-body">
         {% if active_shipments %}
-            <table border="1">
+        <div class="table-wrap">
+            <table class="data-table">
                 <thead>
-                    <tr>
-                        <th>Code</th><th>Pickup</th><th>Delivery</th><th>Weight (kg)</th><th>Status</th><th>Actions</th>
-                    </tr>
+                    <tr><th>Code</th><th>Pickup</th><th>Delivery</th><th>Weight (kg)</th><th>Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                     {% for s in active_shipments %}
                     <tr>
-                        <td>{{ s.shipment_code }}</td>
-                        <td>{{ s.pickup_address }}</td>
-                        <td>{{ s.delivery_address }}</td>
+                        <td><strong>{{ s.shipment_code }}</strong></td>
+                        <td><i class="bi bi-geo-alt" style="color:var(--green-400);margin-right:4px;"></i>{{ s.pickup_address }}</td>
+                        <td><i class="bi bi-flag" style="color:var(--amber-400);margin-right:4px;"></i>{{ s.delivery_address }}</td>
                         <td>{{ s.weight_kg }}</td>
-                        <td>{{ s.get_status_display }}</td>
-                        <td><a href="{% url 'shipment_detail' s.pk %}">View</a></td>
+                        <td>
+                            {% if s.status == 'in_transit' %}<span class="badge badge-blue"><i class="bi bi-arrow-right-circle"></i>{{ s.get_status_display }}</span>
+                            {% elif s.status == 'delivered' %}<span class="badge badge-green"><i class="bi bi-check-circle"></i>{{ s.get_status_display }}</span>
+                            {% else %}<span class="badge badge-amber">{{ s.get_status_display }}</span>{% endif %}
+                        </td>
+                        <td><a href="{% url 'shipment_detail' s.pk %}" class="btn-tbl primary"><i class="bi bi-eye"></i> View</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
         {% else %}
-            <p>No active shipments.</p>
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-truck"></i></div>
+            <p>No active shipments at the moment.</p>
+        </div>
         {% endif %}
-    </section>
+    </div>
+</div>
 
-    <section>
-        <h2>🚗 My Vehicles</h2>
-        {% for vehicle in my_vehicles %}
-            <p>{{ vehicle.plate_number }} — {{ vehicle.get_vehicle_type_display }} | Status: {{ vehicle.get_status_display }}</p>
-        {% empty %}
-            <p>No vehicles registered. <a href="{% url 'vehicle_create' %}">Register vehicle →</a></p>
-        {% endfor %}
-    </section>
+<!-- My Vehicles -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-car-front"></i></div>
+            <div>
+                <div class="section-title">My Vehicles</div>
+                <div class="section-subtitle">Registered transport vehicles</div>
+            </div>
+        </div>
+        <a href="{% url 'vehicle_create' %}" class="section-action"><i class="bi bi-plus-lg"></i> Add Vehicle</a>
+    </div>
+    <div class="section-body">
+        {% if my_vehicles %}
+        <div class="vehicle-list">
+            {% for vehicle in my_vehicles %}
+            <div class="vehicle-item">
+                <div class="vehicle-icon"><i class="bi bi-truck-front"></i></div>
+                <div class="vehicle-info">
+                    <div class="vehicle-plate">{{ vehicle.plate_number }}</div>
+                    <div class="vehicle-type">{{ vehicle.get_vehicle_type_display }}</div>
+                </div>
+                {% if vehicle.status == 'active' %}<span class="badge badge-green"><i class="bi bi-circle-fill"></i>{{ vehicle.get_status_display }}</span>
+                {% else %}<span class="badge badge-gray">{{ vehicle.get_status_display }}</span>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-car-front"></i></div>
+            <p>No vehicles registered yet.</p>
+            <a href="{% url 'vehicle_create' %}"><i class="bi bi-plus-lg"></i> Register a Vehicle</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
-<!-- ========== COLD STORAGE DASHBOARD ========== -->
+
+{# ══════════════════════════════════════════════════════════ #}
+{#                  COLD STORAGE DASHBOARD                    #}
+{# ══════════════════════════════════════════════════════════ #}
 {% elif user.role == 'cold_storage' %}
 
-    <section>
-        <h2>❄️ My Facilities</h2>
-        {% for facility in facilities %}
-            <div>
-                <h3><a href="{% url 'cold_storage_detail' facility.pk %}">{{ facility.name }}</a></h3>
-                <p>Location: {{ facility.location_name }}</p>
-                <p>Available: {{ facility.available_capacity_tonnes }}T / {{ facility.total_capacity_tonnes }}T</p>
-                <p>Status: {{ facility.get_status_display }}</p>
-            </div>
-        {% empty %}
-            <p>No facilities registered.</p>
-        {% endfor %}
-        <p>Active Bookings: <strong>{{ active_bookings }}</strong></p>
-    </section>
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-buildings"></i></div>
+        <div class="stat-label">Facilities</div>
+        <div class="stat-value">{{ facilities|length }}</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+        <div class="stat-label">Active Bookings</div>
+        <div class="stat-value">{{ active_bookings }}</div>
+    </div>
+</div>
 
-    <section>
-        <h2>🌡️ Recent Temperature Alerts</h2>
+<!-- Facilities -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-thermometer-snow"></i></div>
+            <div>
+                <div class="section-title">My Facilities</div>
+                <div class="section-subtitle">Cold storage locations and capacity</div>
+            </div>
+        </div>
+    </div>
+    <div class="section-body">
+        {% if facilities %}
+        <div class="facility-grid">
+            {% for facility in facilities %}
+            {% with used=facility.total_capacity_tonnes|add:"-"|add:facility.available_capacity_tonnes pct=facility.available_capacity_tonnes|floatformat:0 %}
+            <div class="facility-card">
+                <div class="facility-name"><a href="{% url 'cold_storage_detail' facility.pk %}">{{ facility.name }}</a></div>
+                <div class="facility-meta">
+                    <span><i class="bi bi-geo-alt"></i> {{ facility.location_name }}</span>
+                    <span><i class="bi bi-box"></i> {{ facility.available_capacity_tonnes }}T available of {{ facility.total_capacity_tonnes }}T</span>
+                </div>
+                <div class="cap-bar-wrap">
+                    <div class="cap-label">
+                        <span>Capacity used</span>
+                        <span>{{ facility.available_capacity_tonnes }}T free</span>
+                    </div>
+                    <div class="cap-bar">
+                        <div class="cap-fill {% if facility.available_capacity_tonnes < 5 %}high{% endif %}"
+                             style="width:{{ facility.available_capacity_tonnes|floatformat:0 }}%"></div>
+                    </div>
+                </div>
+                <div style="margin-top:10px;">
+                    {% if facility.status == 'active' %}<span class="badge badge-green"><i class="bi bi-circle-fill"></i>{{ facility.get_status_display }}</span>
+                    {% else %}<span class="badge badge-gray">{{ facility.get_status_display }}</span>{% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-thermometer-snow"></i></div>
+            <p>No facilities registered.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Temperature Alerts -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon" style="background:#fff0f0;border-color:#f5b0b0;color:#b83232;"><i class="bi bi-thermometer-high"></i></div>
+            <div>
+                <div class="section-title">Temperature Alerts</div>
+                <div class="section-subtitle">Recent sensor readings requiring attention</div>
+            </div>
+        </div>
+    </div>
+    <div class="section-body">
         {% if temperature_alerts %}
-            <table border="1">
+        <div class="table-wrap">
+            <table class="data-table">
                 <thead>
-                    <tr><th>Sensor</th><th>Temperature</th><th>Alert</th><th>Time</th></tr>
+                    <tr><th>Sensor</th><th>Temperature</th><th>Alert Level</th><th>Recorded At</th></tr>
                 </thead>
                 <tbody>
                     {% for log in temperature_alerts %}
                     <tr>
                         <td>{{ log.sensor_id }}</td>
-                        <td>{{ log.temperature_celsius }}°C</td>
-                        <td>{{ log.get_alert_level_display }}</td>
+                        <td class="temp-critical">{{ log.temperature_celsius }}°C</td>
+                        <td>
+                            {% if log.alert_level == 'critical' %}<span class="badge badge-red"><i class="bi bi-exclamation-triangle-fill"></i>{{ log.get_alert_level_display }}</span>
+                            {% else %}<span class="badge badge-amber">{{ log.get_alert_level_display }}</span>{% endif %}
+                        </td>
                         <td>{{ log.recorded_at|date:"d M Y H:i" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
         {% else %}
-            <p>No alerts. All temperatures normal ✅</p>
+        <div class="empty-state">
+            <div class="empty-icon" style="background:var(--green-50);color:var(--green-500);"><i class="bi bi-check-circle"></i></div>
+            <p>All temperatures normal. No active alerts. ✅</p>
+        </div>
         {% endif %}
-    </section>
+    </div>
+</div>
 
-<!-- ========== ADMIN DASHBOARD ========== -->
+
+{# ══════════════════════════════════════════════════════════ #}
+{#                      ADMIN DASHBOARD                       #}
+{# ══════════════════════════════════════════════════════════ #}
 {% elif user.role == 'admin' %}
 
-    <section>
-        <h2>📊 Platform Overview</h2>
-        <ul>
-            <li>Total Farmers: <strong>{{ total_farmers }}</strong></li>
-            <li>Total Buyers: <strong>{{ total_buyers }}</strong></li>
-            <li>Total Orders: <strong>{{ total_orders }}</strong></li>
-            <li>Total GMV: <strong>KES {{ total_gmv|floatformat:0 }}</strong></li>
-            <li>Open Disputes: <strong>{{ pending_disputes }}</strong></li>
-        </ul>
-        <a href="{% url 'analytics_dashboard' %}">View Full Analytics →</a> |
-        <a href="{% url 'dispute_list' %}">Manage Disputes →</a>
-    </section>
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-people"></i></div>
+        <div class="stat-label">Total Farmers</div>
+        <div class="stat-value">{{ total_farmers }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-bag-check"></i></div>
+        <div class="stat-label">Total Buyers</div>
+        <div class="stat-value">{{ total_buyers }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-receipt"></i></div>
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value">{{ total_orders }}</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-icon"><i class="bi bi-currency-exchange"></i></div>
+        <div class="stat-label">Platform GMV</div>
+        <div class="stat-value">{{ total_gmv|floatformat:0 }}<small>KES</small></div>
+    </div>
+    <div class="stat-card" style="--top-color:#b83232;">
+        <div class="stat-icon" style="background:#fff0f0;color:#b83232;"><i class="bi bi-chat-square-text"></i></div>
+        <div class="stat-label">Open Disputes</div>
+        <div class="stat-value" style="color:#b83232;">{{ pending_disputes }}</div>
+    </div>
+</div>
+<style>.stat-card:has(.stat-icon[style*="#b83232"])::before{background:linear-gradient(90deg,#b83232,#e05555);}</style>
 
-    <section>
-        <h2>📈 Last 7 Days Metrics</h2>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>Date</th><th>Orders</th><th>GMV (KES)</th>
-                    <th>Farmer Earnings</th><th>Savings vs Middlemen</th>
-                    <th>Cold Chain Trips</th><th>Spoilage Prevented (kg)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for m in recent_metrics %}
-                <tr>
-                    <td>{{ m.date }}</td>
-                    <td>{{ m.completed_orders }}/{{ m.total_orders }}</td>
-                    <td>{{ m.total_gmv|floatformat:0 }}</td>
-                    <td>{{ m.total_farmer_earnings|floatformat:0 }}</td>
-                    <td>{{ m.total_middleman_savings|floatformat:0 }}</td>
-                    <td>{{ m.cold_chain_trips }}</td>
-                    <td>{{ m.spoilage_prevented_kg }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
+<!-- CTA strip -->
+<div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;">
+    <a href="{% url 'analytics_dashboard' %}" class="section-action" style="font-size:13px;padding:8px 16px;"><i class="bi bi-graph-up-arrow"></i> Full Analytics</a>
+    <a href="{% url 'dispute_list' %}" class="section-action" style="font-size:13px;padding:8px 16px;border-color:var(--amber-400);color:var(--amber-600);background:var(--amber-100);"><i class="bi bi-chat-square-text"></i> Manage Disputes</a>
+</div>
 
-    <section>
-        <h2>🔴 Critical Temperature Alerts</h2>
-        {% if critical_alerts %}
-            <table border="1">
+<!-- Last 7 Days Metrics -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon"><i class="bi bi-graph-up"></i></div>
+            <div>
+                <div class="section-title">Last 7 Days — Platform Metrics</div>
+                <div class="section-subtitle">Daily orders, GMV, earnings and cold chain performance</div>
+            </div>
+        </div>
+    </div>
+    <div class="section-body">
+        <div class="table-wrap">
+            <table class="data-table">
                 <thead>
-                    <tr><th>Sensor</th><th>Temp</th><th>Time</th></tr>
+                    <tr>
+                        <th>Date</th>
+                        <th>Orders</th>
+                        <th>GMV (KES)</th>
+                        <th>Farmer Earnings</th>
+                        <th>Savings vs Middlemen</th>
+                        <th>Cold Chain Trips</th>
+                        <th>Spoilage Prevented (kg)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in recent_metrics %}
+                    <tr>
+                        <td>{{ m.date }}</td>
+                        <td>{{ m.completed_orders }} / {{ m.total_orders }}</td>
+                        <td class="metric-highlight">{{ m.total_gmv|floatformat:0 }}</td>
+                        <td>{{ m.total_farmer_earnings|floatformat:0 }}</td>
+                        <td style="color:var(--green-500);font-weight:600;">{{ m.total_middleman_savings|floatformat:0 }}</td>
+                        <td>{{ m.cold_chain_trips }}</td>
+                        <td>{{ m.spoilage_prevented_kg }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:28px;">No metrics available yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Critical Temperature Alerts -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon" style="background:#fff0f0;border-color:#f5b0b0;color:#b83232;"><i class="bi bi-thermometer-high"></i></div>
+            <div>
+                <div class="section-title">Critical Temperature Alerts</div>
+                <div class="section-subtitle">Sensors requiring immediate attention</div>
+            </div>
+        </div>
+    </div>
+    <div class="section-body">
+        {% if critical_alerts %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr><th>Sensor</th><th>Temperature</th><th>Recorded At</th></tr>
                 </thead>
                 <tbody>
                     {% for alert in critical_alerts %}
                     <tr>
                         <td>{{ alert.sensor_id }}</td>
-                        <td>{{ alert.temperature_celsius }}°C</td>
+                        <td class="temp-critical"><i class="bi bi-thermometer-high" style="margin-right:4px;"></i>{{ alert.temperature_celsius }}°C</td>
                         <td>{{ alert.recorded_at|date:"d M Y H:i" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
         {% else %}
-            <p>No critical alerts ✅</p>
+        <div class="empty-state">
+            <div class="empty-icon" style="background:var(--green-50);color:var(--green-500);"><i class="bi bi-check-circle"></i></div>
+            <p>No critical alerts. All cold storage temperatures are within range. ✅</p>
+        </div>
         {% endif %}
-    </section>
+    </div>
+</div>
 
-{% endif %}
+{% endif %}{# end role blocks #}
 
-<!-- NOTIFICATIONS PREVIEW (all roles) -->
+
+{# ══════════════════════════════════════════════════════════ #}
+{#           UNREAD NOTIFICATIONS — shown for all roles       #}
+{# ══════════════════════════════════════════════════════════ #}
 {% if notifications %}
-<section>
-    <h2>🔔 Unread Notifications</h2>
-    <ul>
-        {% for n in notifications %}
-            <li>
-                <strong>{{ n.title }}</strong> — {{ n.message|truncatewords:12 }}
-                <small>{{ n.created_at|timesince }} ago</small>
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'notification_list' %}">View all notifications →</a>
-</section>
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon" style="background:var(--amber-100);border-color:#f5d08a;color:var(--amber-600);"><i class="bi bi-bell-fill"></i></div>
+            <div>
+                <div class="section-title">Unread Notifications</div>
+                <div class="section-subtitle">{{ notifications|length }} unread message{{ notifications|length|pluralize }}</div>
+            </div>
+        </div>
+        <a href="{% url 'notification_list' %}" class="section-action"><i class="bi bi-arrow-right"></i> View All</a>
+    </div>
+    <div class="section-body">
+        <div class="notif-list">
+            {% for n in notifications %}
+            <div class="notif-item">
+                <div class="notif-dot"></div>
+                <div class="notif-body">
+                    <div class="notif-title">{{ n.title }}</div>
+                    <div class="notif-msg">{{ n.message|truncatewords:14 }}</div>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} ago</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 {% endif %}
 
 {% endblock %}

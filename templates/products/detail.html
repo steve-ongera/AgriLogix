@@ -1,86 +1,711 @@
 {% extends 'base.html' %}
 {% block title %}{{ product.name }}{% endblock %}
 
+{% block extra_head %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   PRODUCT DETAIL — ecommerce style, inherits base.html tokens
+═══════════════════════════════════════════════════════════ */
+
+/* ── Breadcrumb ──────────────────────────────────────────── */
+.breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12.5px; color: var(--text-muted); margin-bottom: 22px;
+}
+.breadcrumb a { color: var(--green-500); transition: color .2s; }
+.breadcrumb a:hover { color: var(--green-700); }
+.breadcrumb i { font-size: 11px; }
+
+/* ── Hero layout: image + summary ───────────────────────── */
+.pd-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 28px;
+    align-items: start;
+}
+
+/* ── Image panel ─────────────────────────────────────────── */
+.pd-image-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.pd-img-main {
+    position: relative;
+    width: 100%;
+    padding-top: 72%;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1.5px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+}
+.pd-img-main img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+.pd-no-img {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--green-50) 100%);
+    color: var(--text-placeholder);
+}
+.pd-no-img i { font-size: 52px; color: var(--green-100); }
+.pd-no-img span { font-size: 13px; font-weight: 600; letter-spacing: .4px; }
+
+/* Status overlay */
+.pd-status-badge {
+    position: absolute; top: 14px; left: 14px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 11.5px; font-weight: 700;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.4);
+    display: flex; align-items: center; gap: 5px;
+}
+.pd-status-badge.available { background: rgba(234,245,223,.92); color: var(--green-700); }
+.pd-status-badge.reserved  { background: rgba(253,240,213,.92); color: var(--amber-600); }
+.pd-status-badge.sold      { background: rgba(240,240,240,.92); color: #666; }
+.pd-status-badge.expired   { background: rgba(254,240,240,.92); color: #b83232; }
+
+/* Cert badges overlay */
+.pd-cert-row {
+    position: absolute; top: 14px; right: 14px;
+    display: flex; flex-direction: column; gap: 5px; align-items: flex-end;
+}
+.cert-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 10.5px; font-weight: 700;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.4);
+}
+.cert-pill.organic   { background: rgba(200,230,176,.92); color: var(--green-700); }
+.cert-pill.certified { background: rgba(253,240,213,.92); color: var(--amber-600); }
+
+/* Views chip */
+.pd-views {
+    position: absolute; bottom: 12px; right: 12px;
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 10px;
+    background: rgba(0,0,0,.36); color: #fff;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+    backdrop-filter: blur(6px);
+}
+
+/* ── Summary panel ───────────────────────────────────────── */
+.pd-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.pd-summary-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+}
+
+.pd-category {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: .7px; text-transform: uppercase;
+    color: var(--green-400);
+    display: flex; align-items: center; gap: 5px;
+    padding: 16px 20px 0;
+}
+.pd-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700;
+    color: var(--text-primary); line-height: 1.2;
+    padding: 8px 20px 0;
+}
+.pd-variety {
+    font-size: 13px; color: var(--text-muted);
+    padding: 4px 20px 0;
+}
+
+.pd-farm-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px 14px;
+    border-bottom: 1px solid var(--border-light);
+    flex-wrap: wrap;
+}
+.pd-farm-row a {
+    font-size: 13px; font-weight: 600; color: var(--green-500);
+    display: flex; align-items: center; gap: 4px;
+    transition: color .18s;
+}
+.pd-farm-row a:hover { color: var(--green-700); }
+.pd-farm-dot { color: var(--border); font-size: 12px; }
+.pd-farmer { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+
+/* Price block */
+.pd-price-block {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+}
+.pd-price-main {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px; font-weight: 700;
+    color: var(--green-700); line-height: 1;
+}
+.pd-price-main small {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    color: var(--text-muted); margin-left: 4px;
+}
+.pd-price-sub {
+    font-size: 12.5px; color: var(--text-muted); margin-top: 5px;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.pd-price-sub .sep { color: var(--border); }
+
+/* Quick facts chips */
+.pd-quick-facts {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; gap: 8px; flex-wrap: wrap;
+}
+.qf-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 1.5px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 12px; font-weight: 500; color: var(--text-second);
+}
+.qf-chip i { font-size: 13px; color: var(--green-400); }
+.qf-chip.highlight { background: var(--green-50); border-color: var(--green-100); color: var(--green-700); }
+
+/* CTA block */
+.pd-cta-block {
+    padding: 16px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.btn-order-main {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--green-500), var(--green-400));
+    color: #fff; border: none; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 14px rgba(62,124,35,.3);
+    transition: opacity .2s, box-shadow .2s, transform .15s;
+    text-align: center;
+}
+.btn-order-main:hover {
+    opacity: .93; box-shadow: 0 5px 20px rgba(62,124,35,.38);
+    transform: translateY(-1px); color: #fff;
+}
+.btn-edit-row {
+    display: flex; gap: 8px;
+}
+.btn-edit {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px;
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; color: var(--text-second);
+    transition: all .18s; cursor: pointer;
+}
+.btn-edit:hover { border-color: var(--green-300); color: var(--green-700); background: var(--green-50); }
+.btn-delete {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px;
+    background: var(--white); border: 1.5px solid #f5b0b0;
+    border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; color: #b83232;
+    transition: all .18s; cursor: pointer;
+}
+.btn-delete:hover { background: #fff4f4; border-color: #b83232; }
+
+/* ── Description card ────────────────────────────────────── */
+.pd-description {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    margin-bottom: 22px;
+}
+.pd-description-head {
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+    font-family: 'Playfair Display', serif;
+    font-size: 15.5px; font-weight: 600; color: var(--text-primary);
+    display: flex; align-items: center; gap: 8px;
+}
+.pd-description-head i { color: var(--green-500); }
+.pd-description-body {
+    padding: 16px 20px;
+    font-size: 14px; color: var(--text-second);
+    line-height: 1.8;
+}
+.pd-description-body p { margin: 0; }
+
+/* ── Full product details table ──────────────────────────── */
+.section-card {
+    background: var(--white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    margin-bottom: 22px;
+}
+.section-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--white) 60%, var(--green-50));
+}
+.section-icon {
+    width: 32px; height: 32px;
+    background: var(--green-50); border: 1.5px solid var(--green-100);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: var(--green-500); flex-shrink: 0;
+}
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15.5px; font-weight: 600; color: var(--text-primary);
+}
+
+/* Details grid (replaces boring table) */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0;
+}
+.detail-cell {
+    padding: 13px 20px;
+    border-right: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+}
+.detail-cell:nth-child(even) { background: var(--off-white); }
+.detail-key {
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: .6px; text-transform: uppercase;
+    color: var(--text-placeholder); margin-bottom: 4px;
+}
+.detail-val {
+    font-size: 14px; font-weight: 500; color: var(--text-primary);
+    display: flex; align-items: center; gap: 5px;
+}
+.detail-val a { color: var(--green-500); transition: color .18s; }
+.detail-val a:hover { color: var(--green-700); }
+
+/* ── Data table (market prices / history) ────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+.data-table thead th {
+    padding: 10px 18px;
+    text-align: left;
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: .6px; text-transform: uppercase;
+    color: var(--text-muted); background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+.data-table thead th:first-child { padding-left: 22px; }
+.data-table tbody tr { border-bottom: 1px solid var(--border-light); transition: background .18s; }
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--surface); }
+.data-table td { padding: 11px 18px; color: var(--text-second); vertical-align: middle; }
+.data-table td:first-child { padding-left: 22px; font-weight: 500; color: var(--text-primary); }
+.data-table .price-cell { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 600; color: var(--green-700); }
+.data-table .price-cell.market { color: var(--amber-600); }
+
+/* Badge */
+.badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 11.5px; font-weight: 600; white-space: nowrap;
+}
+.badge-green  { background: #eaf7ea; color: #1d6b1d; }
+.badge-amber  { background: var(--amber-100); color: var(--amber-600); }
+.badge-gray   { background: var(--surface); color: var(--text-muted); }
+
+/* Empty state (inline) */
+.table-empty {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; padding: 36px 20px; text-align: center;
+}
+.table-empty i { font-size: 30px; color: var(--green-100); }
+.table-empty p { font-size: 13px; color: var(--text-muted); }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .pd-hero { grid-template-columns: 1fr; }
+    .pd-img-main { padding-top: 56%; }
+}
+@media (max-width: 600px) {
+    .pd-name { font-size: 22px; }
+    .pd-price-main { font-size: 28px; }
+    .details-grid { grid-template-columns: 1fr 1fr; }
+    .pd-quick-facts { gap: 6px; }
+    .qf-chip { font-size: 11.5px; padding: 5px 10px; }
+}
+@media (max-width: 400px) {
+    .details-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <i class="bi bi-house-door-fill"></i>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="{% url 'product_list' %}">Products</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>{{ product.name }}</span>
+</nav>
+{% endblock %}
+
 {% block content %}
-<h1>{{ product.name }}</h1>
-<p>{{ product.get_status_display }} | Views: {{ product.views_count }}</p>
 
-<section>
-    <h2>Product Info</h2>
-    <table border="1">
-        <tr><th>Farm</th><td><a href="{% url 'farm_detail' product.farm.pk %}">{{ product.farm.name }}</a></td></tr>
-        <tr><th>Farmer</th><td>{{ product.farm.owner.get_full_name }}</td></tr>
-        <tr><th>Category</th><td>{{ product.category.icon }} {{ product.category.name }}</td></tr>
-        <tr><th>Variety</th><td>{{ product.variety|default:"—" }}</td></tr>
-        <tr><th>Quantity Available</th><td>{{ product.quantity_available }} {{ product.unit }}</td></tr>
-        <tr><th>Price</th><td>KES {{ product.price_per_unit }} / {{ product.unit }}</td></tr>
-        <tr><th>Min Order</th><td>{{ product.minimum_order_quantity }} {{ product.unit }}</td></tr>
-        <tr><th>Harvest Date</th><td>{{ product.harvest_date }}</td></tr>
-        <tr><th>Expiry Date</th><td>{{ product.expiry_date|default:"—" }}</td></tr>
-        <tr><th>Organic</th><td>{{ product.is_organic|yesno:"Yes,No" }}</td></tr>
-        <tr><th>Certified</th><td>{{ product.is_certified|yesno:"Yes,No" }}</td></tr>
-        <tr><th>Cold Chain Required</th><td>{{ product.category.requires_cold_chain|yesno:"Yes,No" }}</td></tr>
-    </table>
-    <p>{{ product.description }}</p>
-</section>
+<!-- ══════════════════════════════════════════════════════
+     HERO: image + summary
+══════════════════════════════════════════════════════ -->
+<div class="pd-hero">
 
-{% if user.role == 'buyer' %}
-<section>
-    <a href="{% url 'order_create' product.pk %}">
-        <button>🛒 Place Order</button>
-    </a>
-</section>
+    <!-- Image panel -->
+    <div class="pd-image-panel">
+        <div class="pd-img-main">
+            {% if product.photo %}
+            <img src="{{ product.photo.url }}" alt="{{ product.name }}">
+            {% else %}
+            <div class="pd-no-img">
+                <i class="bi bi-image"></i>
+                <span>No Image Available</span>
+            </div>
+            {% endif %}
+
+            <!-- Status -->
+            <span class="pd-status-badge {{ product.status }}">
+                {% if product.status == 'available' %}<i class="bi bi-circle-fill" style="font-size:7px;"></i> Available
+                {% elif product.status == 'reserved' %}<i class="bi bi-lock-fill" style="font-size:9px;"></i> Reserved
+                {% elif product.status == 'sold' %}<i class="bi bi-check-circle-fill" style="font-size:9px;"></i> Sold Out
+                {% else %}<i class="bi bi-x-circle-fill" style="font-size:9px;"></i> Expired
+                {% endif %}
+            </span>
+
+            <!-- Cert badges -->
+            {% if product.is_organic or product.is_certified %}
+            <div class="pd-cert-row">
+                {% if product.is_organic %}<span class="cert-pill organic"><i class="bi bi-leaf"></i> Organic</span>{% endif %}
+                {% if product.is_certified %}<span class="cert-pill certified"><i class="bi bi-patch-check"></i> Certified</span>{% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Views -->
+            <span class="pd-views"><i class="bi bi-eye"></i> {{ product.views_count }} views</span>
+        </div>
+    </div>
+
+    <!-- Summary panel -->
+    <div class="pd-summary">
+        <div class="pd-summary-card">
+
+            <!-- Category + Name -->
+            {% if product.category %}
+            <div class="pd-category">{{ product.category.icon }} {{ product.category.name }}</div>
+            {% endif %}
+            <h1 class="pd-name">{{ product.name }}</h1>
+            {% if product.variety %}<p class="pd-variety">Variety: {{ product.variety }}</p>{% endif %}
+
+            <!-- Farm row -->
+            <div class="pd-farm-row">
+                <a href="{% url 'farm_detail' product.farm.pk %}"><i class="bi bi-geo-alt-fill"></i>{{ product.farm.name }}</a>
+                <span class="pd-farm-dot">·</span>
+                <span class="pd-farmer"><i class="bi bi-person-fill"></i>{{ product.farm.owner.get_full_name }}</span>
+                {% if product.farm.location_name %}
+                <span class="pd-farm-dot">·</span>
+                <span class="pd-farmer"><i class="bi bi-map"></i>{{ product.farm.location_name }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Price block -->
+            <div class="pd-price-block">
+                <div class="pd-price-main">
+                    {{ product.price_per_unit|floatformat:2 }}<small>KES / {{ product.get_unit_display }}</small>
+                </div>
+                <div class="pd-price-sub">
+                    <span><i class="bi bi-box-seam" style="color:var(--green-400);"></i>
+                        {{ product.quantity_available }} {{ product.get_unit_display }} available
+                    </span>
+                    <span class="sep">·</span>
+                    <span><i class="bi bi-bag-check" style="color:var(--green-400);"></i>
+                        Min. order: {{ product.minimum_order_quantity }} {{ product.get_unit_display }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Quick facts chips -->
+            <div class="pd-quick-facts">
+                <span class="qf-chip highlight">
+                    <i class="bi bi-calendar3"></i>
+                    Harvested {{ product.harvest_date|date:"d M Y" }}
+                </span>
+                {% if product.expiry_date %}
+                <span class="qf-chip">
+                    <i class="bi bi-calendar-x"></i>
+                    Expires {{ product.expiry_date|date:"d M Y" }}
+                </span>
+                {% endif %}
+                {% if product.category.requires_cold_chain %}
+                <span class="qf-chip">
+                    <i class="bi bi-thermometer-snow"></i>
+                    Cold Chain Required
+                </span>
+                {% endif %}
+                {% if product.is_organic %}
+                <span class="qf-chip highlight">
+                    <i class="bi bi-leaf"></i> Organic
+                </span>
+                {% endif %}
+                {% if product.is_certified %}
+                <span class="qf-chip" style="background:var(--amber-100);border-color:#f5d08a;color:var(--amber-600);">
+                    <i class="bi bi-patch-check" style="color:var(--amber-400);"></i> Certified
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- CTA block -->
+            <div class="pd-cta-block">
+                {% if user.role == 'buyer' and product.status == 'available' %}
+                <a href="{% url 'order_create' product.pk %}" class="btn-order-main">
+                    <i class="bi bi-cart-plus"></i> Place Order
+                </a>
+                {% elif user.role == 'buyer' %}
+                <div class="btn-order-main" style="opacity:.5;cursor:not-allowed;background:var(--surface);color:var(--text-muted);box-shadow:none;">
+                    <i class="bi bi-slash-circle"></i> Currently Unavailable
+                </div>
+                {% endif %}
+
+                {% if user == product.farm.owner %}
+                <div class="btn-edit-row">
+                    <a href="{% url 'product_edit' product.pk %}" class="btn-edit">
+                        <i class="bi bi-pencil"></i> Edit Listing
+                    </a>
+                    <a href="{% url 'product_delete' product.pk %}" class="btn-delete"
+                       onclick="return confirm('Remove this product listing?')">
+                        <i class="bi bi-trash3"></i> Remove
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+        </div><!-- /pd-summary-card -->
+    </div>
+
+</div><!-- /pd-hero -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     DESCRIPTION
+══════════════════════════════════════════════════════ -->
+{% if product.description %}
+<div class="pd-description">
+    <div class="pd-description-head">
+        <i class="bi bi-file-text"></i> About this Product
+    </div>
+    <div class="pd-description-body">
+        <p>{{ product.description }}</p>
+    </div>
+</div>
 {% endif %}
 
-{% if user == product.farm.owner %}
-<p>
-    <a href="{% url 'product_edit' product.pk %}">✏️ Edit</a> |
-    <a href="{% url 'product_delete' product.pk %}">🗑️ Remove Listing</a>
-</p>
-{% endif %}
 
-<section>
-    <h2>📊 Market Price Comparison</h2>
+<!-- ══════════════════════════════════════════════════════
+     FULL DETAILS GRID
+══════════════════════════════════════════════════════ -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-icon"><i class="bi bi-info-circle"></i></div>
+        <span class="section-title">Product Details</span>
+    </div>
+    <div class="details-grid">
+        <div class="detail-cell">
+            <div class="detail-key">Farm</div>
+            <div class="detail-val"><i class="bi bi-tree" style="color:var(--green-400);"></i><a href="{% url 'farm_detail' product.farm.pk %}">{{ product.farm.name }}</a></div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Farmer</div>
+            <div class="detail-val"><i class="bi bi-person" style="color:var(--green-400);"></i>{{ product.farm.owner.get_full_name }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Category</div>
+            <div class="detail-val">{{ product.category.icon }} {{ product.category.name }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Variety</div>
+            <div class="detail-val">{{ product.variety|default:"—" }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Quantity Available</div>
+            <div class="detail-val"><i class="bi bi-box-seam" style="color:var(--green-400);"></i>{{ product.quantity_available }} {{ product.get_unit_display }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Price per Unit</div>
+            <div class="detail-val" style="font-family:'Playfair Display',serif;font-size:16px;color:var(--green-700);">KES {{ product.price_per_unit }} / {{ product.get_unit_display }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Minimum Order</div>
+            <div class="detail-val"><i class="bi bi-bag-check" style="color:var(--green-400);"></i>{{ product.minimum_order_quantity }} {{ product.get_unit_display }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Total Value</div>
+            <div class="detail-val" style="color:var(--green-700);font-weight:600;">KES {{ product.total_value|floatformat:0 }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Harvest Date</div>
+            <div class="detail-val"><i class="bi bi-calendar3" style="color:var(--green-400);"></i>{{ product.harvest_date }}</div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Expiry Date</div>
+            <div class="detail-val">
+                {% if product.expiry_date %}
+                <i class="bi bi-calendar-x" style="color:var(--amber-400);"></i>{{ product.expiry_date }}
+                {% else %}—{% endif %}
+            </div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Organic</div>
+            <div class="detail-val">
+                {% if product.is_organic %}
+                <span class="badge badge-green"><i class="bi bi-leaf"></i> Yes — Organic</span>
+                {% else %}
+                <span class="badge badge-gray"><i class="bi bi-dash"></i> No</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Certified</div>
+            <div class="detail-val">
+                {% if product.is_certified %}
+                <span class="badge badge-amber"><i class="bi bi-patch-check"></i> Yes — Certified</span>
+                {% else %}
+                <span class="badge badge-gray"><i class="bi bi-dash"></i> No</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Cold Chain Required</div>
+            <div class="detail-val">
+                {% if product.category.requires_cold_chain %}
+                <span class="badge badge-green"><i class="bi bi-thermometer-snow"></i> Required</span>
+                {% else %}
+                <span class="badge badge-gray"><i class="bi bi-dash"></i> Not Required</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-cell">
+            <div class="detail-key">Status</div>
+            <div class="detail-val">
+                {% if product.status == 'available' %}<span class="badge badge-green"><i class="bi bi-circle-fill" style="font-size:7px;"></i> {{ product.get_status_display }}</span>
+                {% elif product.status == 'reserved' %}<span class="badge badge-amber"><i class="bi bi-lock"></i> {{ product.get_status_display }}</span>
+                {% else %}<span class="badge badge-gray">{{ product.get_status_display }}</span>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     MARKET PRICE COMPARISON
+══════════════════════════════════════════════════════ -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-icon" style="background:var(--amber-100);border-color:#f5d08a;color:var(--amber-600);"><i class="bi bi-graph-up-arrow"></i></div>
+        <span class="section-title">Market Price Comparison</span>
+    </div>
     {% if market_prices %}
-    <table border="1">
-        <thead>
-            <tr><th>Market</th><th>Price/kg (KES)</th><th>Date</th></tr>
-        </thead>
-        <tbody>
-            {% for mp in market_prices %}
-            <tr>
-                <td>{{ mp.get_market_display }}</td>
-                <td>{{ mp.price_per_kg }}</td>
-                <td>{{ mp.recorded_date }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div style="overflow-x:auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Market</th>
+                    <th>Price / kg (KES)</th>
+                    <th>vs Farm Price</th>
+                    <th>Date Recorded</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mp in market_prices %}
+                <tr>
+                    <td>{{ mp.get_market_display }}</td>
+                    <td class="price-cell market">{{ mp.price_per_kg }}</td>
+                    <td>
+                        {% if mp.price_per_kg > product.price_per_unit %}
+                        <span class="badge badge-green"><i class="bi bi-arrow-up"></i> Farm price lower</span>
+                        {% elif mp.price_per_kg < product.price_per_unit %}
+                        <span class="badge badge-amber"><i class="bi bi-arrow-down"></i> Market cheaper</span>
+                        {% else %}
+                        <span class="badge badge-gray"><i class="bi bi-dash"></i> Same</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ mp.recorded_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <p>No market price data available.</p>
+    <div class="table-empty">
+        <i class="bi bi-graph-up"></i>
+        <p>No market price data available for this product yet.</p>
+    </div>
     {% endif %}
-</section>
+</div>
 
-<section>
-    <h2>📈 Price History</h2>
+
+<!-- ══════════════════════════════════════════════════════
+     PRICE HISTORY
+══════════════════════════════════════════════════════ -->
+<div class="section-card">
+    <div class="section-head">
+        <div class="section-icon"><i class="bi bi-clock-history"></i></div>
+        <span class="section-title">Price History</span>
+    </div>
     {% if price_history %}
-    <table border="1">
-        <thead>
-            <tr><th>Farm Price (KES)</th><th>Market Price (KES)</th><th>Notes</th><th>Date</th></tr>
-        </thead>
-        <tbody>
-            {% for ph in price_history %}
-            <tr>
-                <td>{{ ph.price }}</td>
-                <td>{{ ph.market_price|default:"—" }}</td>
-                <td>{{ ph.notes|default:"—" }}</td>
-                <td>{{ ph.recorded_at|date:"d M Y" }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div style="overflow-x:auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Farm Price (KES)</th>
+                    <th>Market Price (KES)</th>
+                    <th>Notes</th>
+                    <th>Recorded</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ph in price_history %}
+                <tr>
+                    <td class="price-cell">{{ ph.price }}</td>
+                    <td class="price-cell market">{{ ph.market_price|default:"—" }}</td>
+                    <td style="color:var(--text-muted);font-size:13px;">{{ ph.notes|default:"—" }}</td>
+                    <td>{{ ph.recorded_at|date:"d M Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <p>No price history yet.</p>
+    <div class="table-empty">
+        <i class="bi bi-clock-history"></i>
+        <p>No price history recorded yet.</p>
+    </div>
     {% endif %}
-</section>
+</div>
+
 {% endblock %}
